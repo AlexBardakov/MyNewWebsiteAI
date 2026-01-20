@@ -1,0 +1,213 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------
+// Admins & System
+// ---------------------------------------------------------
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model TelegramSubscriber {
+  id        String   @id @default(cuid())
+  chatId    String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------
+
+model Category {
+  id           String    @id @default(uuid())
+  name         String
+  isActive     Boolean   @default(true)
+  displayOrder Int       @default(0)
+  isMold       Boolean   @default(false)
+  products     Product[]
+}
+
+model Product {
+  id                 String  @id @default(uuid())
+  name               String
+  sigmaName          String?
+  article            String?
+  description        String?
+  imageUrl           String?
+  priceRub           Int
+  unit               String // "kg" или "pcs"
+  avgPackWeightGrams Int?    @default(0)
+  remainder          Int
+  isActive           Boolean @default(true)
+  displayOrder       Int     @default(0)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  orderItems     OrderItem[]
+  recipeProducts RecipeProduct[]
+  productGroups  ProductOnGroup[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([article])
+  @@index([categoryId, displayOrder])
+}
+
+model ProductGroup {
+  id               String  @id @default(uuid())
+  name             String
+  slug             String? @unique
+  isPublic         Boolean @default(false)
+  useInConstructor Boolean @default(false)
+  basePercent      Int     @default(0)
+  displayOrder     Int     @default(0)
+
+  products ProductOnGroup[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductOnGroup {
+  productId String
+  groupId   String
+
+  product Product      @relation(fields: [productId], references: [id])
+  group   ProductGroup @relation(fields: [groupId], references: [id])
+
+  @@id([productId, groupId])
+  @@index([groupId])
+}
+
+// ---------------------------------------------------------
+// Orders
+// ---------------------------------------------------------
+
+model Order {
+  id String @id @default(uuid())
+
+  customerName    String
+  customerPhone   String
+  customerAddress String?
+  customerComment String?
+
+  // SQLite не умеет Enum, используем String
+  // Values: "new", "picking", "awaiting_payment", "paid", "completed", "cancelled"
+  status         String @default("new")
+  
+  // Values: "pickup", "delivery"
+  deliveryMethod String @default("pickup")
+
+  items OrderItem[]
+
+  totalRub    Int
+  deliveryRub Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model OrderItem {
+  id String @id @default(uuid())
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  productName  String
+  unit         String
+  priceRub     Int
+  quantity     Int
+  lineTotalRub Int
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
+// ---------------------------------------------------------
+// Content: Recipes
+// ---------------------------------------------------------
+
+model RecipeCategory {
+  id           String  @id @default(uuid())
+  name         String
+  isActive     Boolean @default(true)
+  displayOrder Int     @default(0)
+
+  recipes Recipe[]
+}
+
+model Recipe {
+  id               String  @id @default(uuid())
+  title            String
+  shortDescription String?
+  previewImageUrl  String?
+  coverUrl         String?
+  mediaNote        String?
+  ingredientsText  String?
+  content          String?
+  isActive         Boolean @default(true)
+
+  categoryId String?
+  category   RecipeCategory? @relation(fields: [categoryId], references: [id])
+
+  recipeProducts RecipeProduct[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([isActive, categoryId, createdAt])
+}
+
+model RecipeProduct {
+  id        String @id @default(uuid())
+  recipeId  String
+  productId String
+
+  recipe  Recipe  @relation(fields: [recipeId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([recipeId, productId])
+  @@index([productId])
+}
+
+// ---------------------------------------------------------
+// Content: Page Blocks
+// ---------------------------------------------------------
+
+model PageBlock {
+  id           String   @id @default(cuid())
+  page         String   @default("about")
+  
+  // Values: "TEXT", "IMAGE_LEFT", "IMAGE_RIGHT", "GALLERY"
+  kind         String   
+  
+  displayOrder Int
+  
+  // SQLite может ругаться на Json, используем String (будем делать JSON.stringify)
+  data         String   
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([page, displayOrder])
+}
