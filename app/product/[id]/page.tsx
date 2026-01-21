@@ -3,7 +3,7 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import ProductActions from "@/components/product-actions";
+import { ProductActions } from "@/components/product-actions";
 
 // В Next.js 15 params это Promise
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {

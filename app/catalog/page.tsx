@@ -8,20 +8,17 @@ export const metadata: Metadata = {
 };
 
 export default async function CatalogPage() {
-  // 1. Получаем активные категории
+  // 1. Получаем активные категории для фильтров
   const categories = await prisma.category.findMany({
     where: { isActive: true },
     orderBy: { displayOrder: 'asc' },
   });
 
-  // 2. Получаем товары
+  // 2. Получаем ВСЕ активные товары (убрали фильтр по плесени)
   const products = await prisma.product.findMany({
-    where: { 
+    where: {
       isActive: true,
-      // ИСПРАВЛЕНИЕ: фильтруем по полю isMold внутри связи category
-      category: {
-        isMold: false 
-      }
+      // Фильтр isMold убран, чтобы в каталоге были все товары
     },
     orderBy: { displayOrder: 'asc' },
     include: {
@@ -31,7 +28,7 @@ export default async function CatalogPage() {
 
   return (
     <div className="container py-10">
-      <h1 className="text-4xl font-bold mb-8">Каталог</h1>
+      <h1 className="text-4xl font-bold mb-8 text-primary">Каталог</h1>
       <CatalogClient initialProducts={products} categories={categories} />
     </div>
   );

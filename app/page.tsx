@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 // ИСПРАВЛЕННЫЙ ИМПОРТ (kebab-case имя файла):
-import ProductCard from "@/components/product-card";
+import { ProductCard } from "@/components/product-card";
 
 export default async function HomePage() {
   const products = await prisma.product.findMany({
