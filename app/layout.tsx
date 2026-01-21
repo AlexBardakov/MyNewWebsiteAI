@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/header";
+import { Header } from "@/components/header";
 import Footer from "@/components/footer";
 // ИЗМЕНЕНИЕ: Импортируем Toaster из 'sonner', а не 'toaster'
 import { Toaster } from "@/components/ui/sonner"; 

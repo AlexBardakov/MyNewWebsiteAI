@@ -1,6 +1,6 @@
 'use client';
 
-import { useCartStore } from "@/store/cart";
+import { useCart } from "@/store/cart";
 import { useActionState, useEffect, useState } from "react";
 import { placeOrder } from "@/actions/place-order";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 
 export default function CheckoutPage() {
-  const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCartStore();
+  const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
   
   // Hook для работы с Server Action

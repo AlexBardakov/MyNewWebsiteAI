@@ -1,84 +1,94 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { ShoppingCart } from 'lucide-react'; // Убедитесь, что lucide-react установлен
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useCartStore } from '@/store/cart';
-import { cn, formatPrice } from '@/lib/utils'; // formatPrice мы добавили в прошлом шаге в utils
+import Image from "next/image";
+import Link from "next/link";
+import { useCart } from "@/store/cart"; // <--- Исправляем импорт
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
-// Временный интерфейс, пока Prisma типы не подтянулись глобально
-interface ProductProps {
-  id: string;
-  name: string;
-  description: string | null;
-  priceRub: number;
-  imageUrl: string | null;
-  unit: string;
-  category?: { name: string };
-  isNew?: boolean; // Можно вычислять по дате
+interface ProductCardProps {
+  product: {
+    id: string;
+    name: string;
+    priceRub: number;
+    unit: string;
+    imageUrl: string | null;
+    avgPackWeightGrams: number | null; // Важно для шага
+    remainder: number;
+    // ... остальные поля
+  };
 }
 
-export default function ProductCard({ product }: { product: ProductProps }) {
-  const addItem = useCartStore((state) => state.addItem);
+export function ProductCard({ product }: ProductCardProps) {
+  const addItem = useCart((state) => state.addItem);
 
-  // Обработчик добавления в корзину (чтобы не переходило на страницу товара)
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    addItem(product);
+    e.preventDefault(); // Чтобы не переходить по ссылке при клике на кнопку
+
+    // Вычисляем шаг (как мы делали в product-actions)
+    const step = product.unit === 'pcs'
+      ? 1
+      : (product.avgPackWeightGrams || 100);
+
+    addItem({
+      id: product.id,
+      name: product.name,
+      priceRub: product.priceRub,
+      quantity: step, // Добавляем сразу один "шаг" (или кусок)
+      unit: product.unit,
+      image: product.imageUrl || undefined,
+      step: step,
+    });
+
+    toast.success(`В корзину: ${product.name}`);
   };
 
   return (
-    <Link href={`/product/${product.id}`}>
-      <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300 group cursor-pointer overflow-hidden border-border/50">
-        <div className="relative aspect-square overflow-hidden bg-secondary/20">
+    <Link href={`/product/${product.id}`} className="group block h-full">
+      <div className="flex h-full flex-col overflow-hidden rounded-lg border bg-white shadow-sm transition-all hover:shadow-md">
+        {/* Картинка */}
+        <div className="relative aspect-square overflow-hidden bg-gray-100">
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
               alt={product.name}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              Нет фото
-            </div>
-          )}
-          {product.category && (
-            <Badge variant="secondary" className="absolute top-2 left-2 opacity-90">
-              {product.category.name}
-            </Badge>
+             <div className="flex h-full items-center justify-center text-gray-400">Нет фото</div>
           )}
         </div>
-        
-        <CardContent className="flex-1 p-4">
-          <h3 className="font-semibold text-lg line-clamp-1 mb-1 group-hover:text-primary transition-colors">
+
+        {/* Контент */}
+        <div className="flex flex-1 flex-col p-4">
+          <h3 className="mb-2 text-lg font-medium text-gray-900 line-clamp-2">
             {product.name}
           </h3>
-          <p className="text-sm text-muted-foreground line-clamp-2 h-10 mb-2">
-            {product.description || 'Вкуснейший сыр, который стоит попробовать.'}
-          </p>
-          <div className="font-bold text-xl">
-            {formatPrice(product.priceRub)} 
-            <span className="text-sm font-normal text-muted-foreground ml-1">
-              / {product.unit === 'kg' ? 'кг' : 'шт'}
-            </span>
-          </div>
-        </CardContent>
 
-        <CardFooter className="p-4 pt-0 mt-auto">
-          <Button 
-            onClick={handleAddToCart} 
-            className="w-full gap-2 transition-all active:scale-95"
-          >
-            <ShoppingCart size={16} />
-            В корзину
-          </Button>
-        </CardFooter>
-      </Card>
+          <div className="mt-auto flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-gray-900">
+                {product.priceRub} ₽
+              </span>
+              <span className="text-sm text-muted-foreground">
+                за {product.unit === 'kg' ? 'кг' : 'шт'}
+              </span>
+            </div>
+
+            {product.remainder > 0 ? (
+                <Button size="icon" onClick={handleAddToCart}>
+                  <Plus className="h-5 w-5" />
+                </Button>
+            ) : (
+                <span className="text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded">
+                    Нет в наличии
+                </span>
+            )}
+          </div>
+        </div>
+      </div>
     </Link>
   );
 }

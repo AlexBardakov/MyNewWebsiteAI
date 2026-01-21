@@ -1,91 +1,70 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-// Тип товара в корзине (упрощенный, только то, что нужно для чекаута)
-export type CartItem = {
+export interface CartItem {
   id: string;
   name: string;
-  priceRub: number;
-  image?: string | null;
-  unit: string; // 'kg' | 'pcs'
-  quantity: number; // кол-во штук или грамм
-  step: number; // шаг изменения кол-ва (например, 1 шт или 100 гр)
-};
+  priceRub: number; // Вернул priceRub как у вас было
+  quantity: number;
+  image?: string;
+  unit: string;
+  step: number;     // <-- Это поле ОБЯЗАТЕЛЬНО нужно для калькуляции
+}
 
-interface CartState {
+interface CartStore {
   items: CartItem[];
-  addItem: (product: any) => void; // any заменим на тип Product из Prisma позже
+  addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
-  getTotalPrice: () => number;
+  totalItems: () => number;
+  totalPrice: () => number;
 }
 
-export const useCartStore = create<CartState>()(
+export const useCart = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
 
-      addItem: (product) => {
-        set((state) => {
-          const existing = state.items.find((i) => i.id === product.id);
-          // Определяем шаг и начальное кол-во в зависимости от ед. измерения
-          const step = product.unit === 'pcs' ? 1 : 100; 
-          
-          if (existing) {
-            return {
-              items: state.items.map((i) =>
-                i.id === product.id
-                  ? { ...i, quantity: i.quantity + step }
-                  : i
-              ),
-            };
-          }
+      addItem: (item) => set((state) => {
+        const existing = state.items.find((i) => i.id === item.id);
+        if (existing) {
           return {
-            items: [
-              ...state.items,
-              {
-                id: product.id,
-                name: product.name,
-                priceRub: product.priceRub,
-                image: product.imageUrl,
-                unit: product.unit,
-                quantity: step, // Начальное кол-во
-                step: step,
-              },
-            ],
+            items: state.items.map((i) =>
+              i.id === item.id
+                // Используем сохраненный шаг или тот, что пришел
+                ? { ...i, quantity: i.quantity + item.quantity }
+                : i
+            ),
           };
-        });
-      },
+        }
+        return { items: [...state.items, item] };
+      }),
 
-      removeItem: (id) => {
-        set((state) => ({
-          items: state.items.filter((i) => i.id !== id),
-        }));
-      },
+      removeItem: (id) => set((state) => ({
+        items: state.items.filter((i) => i.id !== id),
+      })),
 
-      updateQuantity: (id, quantity) => {
-        set((state) => ({
-          items: state.items.map((i) =>
-            i.id === id ? { ...i, quantity: Math.max(0, quantity) } : i
-          ),
-        }));
-      },
+      updateQuantity: (id, quantity) => set((state) => ({
+        items: state.items.map((i) =>
+          i.id === id ? { ...i, quantity } : i
+        ),
+      })),
 
       clearCart: () => set({ items: [] }),
 
-      getTotalPrice: () => {
-        return get().items.reduce((total, item) => {
-          // Если цена за кг, а количество в граммах (100, 200...), нужно делить
-          if (item.unit === 'kg') {
-            return total + (item.priceRub * item.quantity) / 1000;
-          }
-          return total + item.priceRub * item.quantity;
-        }, 0);
-      },
+      totalItems: () => get().items.reduce((acc, item) => acc + (item.unit === 'pcs' ? item.quantity : 1), 0),
+
+      totalPrice: () => get().items.reduce((acc, item) => {
+        if (item.unit === 'kg') {
+           // Цена за кг * граммы / 1000
+           return acc + (item.priceRub * item.quantity) / 1000;
+        }
+        return acc + item.priceRub * item.quantity;
+      }, 0),
     }),
     {
-      name: 'cheese-cart-storage', // имя ключа в localStorage
+      name: 'cheese-cart',
       storage: createJSONStorage(() => localStorage),
     }
   )
