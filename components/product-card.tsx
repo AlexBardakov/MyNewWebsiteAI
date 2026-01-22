@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCart } from "@/store/cart"; // <--- Исправляем импорт
+import { useCart } from "@/store/cart";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -14,9 +14,8 @@ interface ProductCardProps {
     priceRub: number;
     unit: string;
     imageUrl: string | null;
-    avgPackWeightGrams: number | null; // Важно для шага
+    avgPackWeightGrams: number | null;
     remainder: number;
-    // ... остальные поля
   };
 }
 
@@ -24,9 +23,8 @@ export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCart((state) => state.addItem);
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault(); // Чтобы не переходить по ссылке при клике на кнопку
+    e.preventDefault();
 
-    // Вычисляем шаг (как мы делали в product-actions)
     const step = product.unit === 'pcs'
       ? 1
       : (product.avgPackWeightGrams || 100);
@@ -35,7 +33,7 @@ export function ProductCard({ product }: ProductCardProps) {
       id: product.id,
       name: product.name,
       priceRub: product.priceRub,
-      quantity: step, // Добавляем сразу один "шаг" (или кусок)
+      quantity: step,
       unit: product.unit,
       image: product.imageUrl || undefined,
       step: step,
@@ -46,45 +44,56 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link href={`/product/${product.id}`} className="group block h-full">
-      <div className="flex h-full flex-col overflow-hidden rounded-lg border bg-white shadow-sm transition-all hover:shadow-md">
+      {/* ИЗМЕНЕНИЯ: rounded-2xl, border-none, hover:-translate-y-1 */}
+      <div className="flex h-full flex-col overflow-hidden rounded-2xl border-none bg-card text-card-foreground shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+
         {/* Картинка */}
-        <div className="relative aspect-square overflow-hidden bg-gray-100">
+        <div className="relative aspect-square overflow-hidden bg-secondary/30">
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
               alt={product.name}
               fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
-             <div className="flex h-full items-center justify-center text-gray-400">Нет фото</div>
+             <div className="flex h-full items-center justify-center text-muted-foreground">Нет фото</div>
+          )}
+
+          {/* Бейдж "Нет в наличии" поверх картинки */}
+          {product.remainder <= 0 && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+                <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-600">
+                    Раскупили
+                </span>
+            </div>
           )}
         </div>
 
         {/* Контент */}
-        <div className="flex flex-1 flex-col p-4">
-          <h3 className="mb-2 text-lg font-medium text-gray-900 line-clamp-2">
+        <div className="flex flex-1 flex-col p-5">
+          <h3 className="mb-2 text-lg font-medium leading-tight text-gray-900 group-hover:text-primary transition-colors">
             {product.name}
           </h3>
 
-          <div className="mt-auto flex items-center justify-between">
+          <div className="mt-auto pt-4 flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-xl font-bold text-gray-900">
                 {product.priceRub} ₽
               </span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 за {product.unit === 'kg' ? 'кг' : 'шт'}
               </span>
             </div>
 
-            {product.remainder > 0 ? (
-                <Button size="icon" onClick={handleAddToCart}>
+            {product.remainder > 0 && (
+                <Button
+                  size="icon"
+                  onClick={handleAddToCart}
+                  className="h-10 w-10 rounded-full shadow-sm hover:shadow-md transition-shadow"
+                >
                   <Plus className="h-5 w-5" />
                 </Button>
-            ) : (
-                <span className="text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded">
-                    Нет в наличии
-                </span>
             )}
           </div>
         </div>

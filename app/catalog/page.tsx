@@ -27,7 +27,7 @@ export default async function CatalogPage() {
   });
 
   return (
-    <div className="container py-10">
+    <div className="container mx-auto py-10 px-4 md:px-0">
       <h1 className="text-4xl font-bold mb-8 text-primary">Каталог</h1>
       <CatalogClient initialProducts={products} categories={categories} />
     </div>

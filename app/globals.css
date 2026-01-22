@@ -48,9 +48,9 @@
 
 /* СВЕТЛАЯ ТЕМА (Основная) */
 :root {
-  --radius: 0.625rem;
+  --radius: 0.75rem;
 
-  --background: oklch(1 0 0);           /* Белый фон */
+  --background: oklch(0.98 0.01 85);           /* Белый фон */
   --foreground: oklch(0.145 0 0);       /* Темно-серый текст */
 
   --card: oklch(1 0 0);
@@ -59,27 +59,23 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
 
-  /* PRIMARY: Теплый янтарный (Сырный) */
-  /* Примерно соответствует #F59E0B */
   --primary: oklch(0.76 0.16 70);
-  --primary-foreground: oklch(0.205 0 0); /* Темный текст на желтом */
+  --primary-foreground: oklch(0.205 0 0);
 
-  /* SECONDARY: Светлый кремовый */
-  /* Примерно соответствует #FEF3C7 */
-  --secondary: oklch(0.96 0.03 80);
+  --secondary: oklch(0.96 0.04 85);
   --secondary-foreground: oklch(0.205 0 0);
 
-  --muted: oklch(0.97 0 0);
+  --muted: oklch(0.96 0 0);
   --muted-foreground: oklch(0.556 0 0);
 
-  --accent: oklch(0.96 0.03 80); /* Тоже кремовый при наведении */
+  --accent: oklch(0.97 0.04 85);
   --accent-foreground: oklch(0.205 0 0);
 
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(1 0 0);
 
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --border: oklch(0.92 0 0);
+  --input: oklch(0.92 0 0);
   --ring: oklch(0.76 0.16 70); /* Желтое кольцо фокуса */
 
   /* Графики (можно оставить дефолтными или подогнать) */
@@ -104,10 +100,10 @@
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
 
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.20 0 0);
   --card-foreground: oklch(0.985 0 0);
 
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.20 0 0);
   --popover-foreground: oklch(0.985 0 0);
 
   /* В темной теме желтый можно сделать чуть менее ярким или оставить как акцент */
