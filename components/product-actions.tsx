@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { useCart } from "@/store/cart";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
-import { toast } from "sonner";
+import { useState } from 'react';
+import { useCart } from '@/store/cart';
+import { Button } from '@/components/ui/button';
+import { Minus, Plus, ShoppingCart } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ProductActionsProps {
   product: {
@@ -13,7 +13,7 @@ interface ProductActionsProps {
     priceRub: number;
     unit: string;
     imageUrl: string | null;
-    avgPackWeightGrams: number | null; // <--- Получаем вес
+    avgPackWeightGrams: number | null;
     remainder: number;
   };
 }
@@ -21,17 +21,26 @@ interface ProductActionsProps {
 export function ProductActions({ product }: ProductActionsProps) {
   const addItem = useCart((state) => state.addItem);
 
-  // Вычисляем шаг
+  // 1. Считаем шаг.
+  // Если штуки -> 1
+  // Если вес -> переводим граммы в КГ (например, 250г -> 0.25 кг)
   const step = product.unit === 'pcs'
     ? 1
-    : (product.avgPackWeightGrams || 100); // Если вес не задан, шаг 100г
+    : (product.avgPackWeightGrams || 100) / 1000;
 
+  // 2. Инициализируем количество сразу правильным шагом
   const [quantity, setQuantity] = useState(step);
 
-  const handleIncrement = () => setQuantity((prev) => prev + step);
+  const handleIncrement = () => {
+    // Округляем, чтобы не вылезали хвосты типа 0.300000004
+    setQuantity((prev) => Number((prev + step).toFixed(3)));
+  };
 
   const handleDecrement = () => {
-    setQuantity((prev) => (prev > step ? prev - step : step));
+    setQuantity((prev) => {
+      const newVal = prev - step;
+      return newVal < step ? step : Number(newVal.toFixed(3));
+    });
   };
 
   const handleAddToCart = () => {
@@ -40,44 +49,67 @@ export function ProductActions({ product }: ProductActionsProps) {
       name: product.name,
       priceRub: product.priceRub,
       quantity: quantity,
-      image: product.imageUrl || undefined,
       unit: product.unit,
-      step: step, // <--- Сохраняем шаг в корзину
+      image: product.imageUrl || undefined,
+      step: step,
     });
 
-    // Форматируем сообщение
-    const qtyText = product.unit === 'kg' ? `${quantity} г` : `${quantity} шт`;
-    toast.success(`Добавлено: ${qtyText}`);
+    toast.success(`${product.name} добавлен в корзину`);
   };
 
-  if (product.remainder <= 0) {
-     return <Button disabled className="w-full">Нет в наличии</Button>;
-  }
+  // 3. Красивое отображение (0.250 кг или 1 шт)
+  const displayQuantity = product.unit === 'kg'
+    ? `${quantity.toFixed(3)} кг`
+    : `${quantity} шт`;
+
+  // 4. Расчет цены (просто умножаем, т.к. quantity уже в правильных единицах)
+  const displayPrice = (product.priceRub * quantity).toLocaleString('ru-RU');
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-4">
-        <div className="flex items-center rounded-md border">
-          <Button variant="ghost" size="icon" onClick={handleDecrement} disabled={quantity <= step}>
+        {/* Кнопки +/- */}
+        <div className="flex items-center rounded-md border bg-secondary/10">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDecrement}
+            disabled={quantity <= step}
+            className="h-10 w-10"
+          >
             <Minus className="h-4 w-4" />
           </Button>
-          <span className="w-16 text-center font-medium">
-            {product.unit === 'kg' ? `${quantity} г` : quantity}
+
+          <span className="w-24 text-center font-medium tabular-nums">
+            {displayQuantity}
           </span>
-          <Button variant="ghost" size="icon" onClick={handleIncrement}>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleIncrement}
+            className="h-10 w-10"
+          >
             <Plus className="h-4 w-4" />
           </Button>
         </div>
-        <div className="text-sm text-muted-foreground">
-          {product.unit === 'kg' && `~ ${(product.priceRub * quantity / 1000).toFixed(0)} ₽`}
-          {product.unit === 'pcs' && `${product.priceRub * quantity} ₽`}
+
+        {/* Цена за выбранный объем */}
+        <div className="text-lg font-bold text-primary">
+          {displayPrice} ₽
         </div>
       </div>
 
-      <Button size="lg" className="w-full" onClick={handleAddToCart}>
+      {/* Кнопка купить */}
+      <Button size="lg" className="w-full font-bold text-lg" onClick={handleAddToCart}>
         <ShoppingCart className="mr-2 h-5 w-5" />
         В корзину
       </Button>
+
+      {/* Подсказка о цене за единицу */}
+      <p className="text-xs text-center text-muted-foreground">
+        Цена за {product.unit === 'kg' ? '1 кг' : '1 шт'}: {product.priceRub} ₽
+      </p>
     </div>
   );
 }

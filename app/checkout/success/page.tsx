@@ -1,31 +1,27 @@
-'use client';
-
-import { Button } from "@/components/ui/button";
-import { useCartStore } from "@/store/cart";
-import { CheckCircle } from "lucide-react";
-import Link from "next/link";
-import { useEffect } from "react";
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2 } from 'lucide-react';
 
 export default function SuccessPage() {
-  const clearCart = useCartStore((state) => state.clearCart);
-
-  // Очищаем корзину при входе на эту страницу
-  useEffect(() => {
-    clearCart();
-  }, [clearCart]);
-
   return (
-    <div className="container flex flex-col items-center justify-center min-h-[60vh] text-center gap-6">
-      <div className="bg-green-100 p-6 rounded-full text-green-600">
-        <CheckCircle className="w-16 h-16" />
+    <div className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center max-w-lg">
+      <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6 animate-in zoom-in duration-500">
+        <CheckCircle2 className="w-12 h-12" />
       </div>
-      <h1 className="text-3xl font-bold">Спасибо за заказ!</h1>
-      <p className="text-muted-foreground max-w-md">
-        Мы уже получили вашу заявку. Менеджер свяжется с вами по указанному телефону в ближайшее время для уточнения деталей.
+
+      <h1 className="text-3xl font-bold mb-4">Заказ принят!</h1>
+      <p className="text-muted-foreground text-lg mb-8">
+        Спасибо за заказ. Мы уже получили его и скоро свяжемся с вами для подтверждения деталей.
       </p>
-      <Link href="/">
-        <Button size="lg">Вернуться в магазин</Button>
-      </Link>
+
+      <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+        <Button asChild size="lg" className="w-full sm:w-auto">
+          <Link href="/">На главную</Link>
+        </Button>
+        <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+          <Link href="/catalog">В каталог</Link>
+        </Button>
+      </div>
     </div>
   );
 }

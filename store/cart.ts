@@ -4,67 +4,71 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 export interface CartItem {
   id: string;
   name: string;
-  priceRub: number; // Вернул priceRub как у вас было
+  priceRub: number;
   quantity: number;
-  image?: string;
   unit: string;
-  step: number;     // <-- Это поле ОБЯЗАТЕЛЬНО нужно для калькуляции
+  image?: string;
+  step?: number;
 }
 
-interface CartStore {
+interface CartState {
   items: CartItem[];
+  total: number;
+
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
-  totalItems: () => number;
-  totalPrice: () => number;
 }
 
-export const useCart = create<CartStore>()(
+export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      total: 0,
 
-      addItem: (item) => set((state) => {
-        const existing = state.items.find((i) => i.id === item.id);
-        if (existing) {
-          return {
-            items: state.items.map((i) =>
-              i.id === item.id
-                // Используем сохраненный шаг или тот, что пришел
-                ? { ...i, quantity: i.quantity + item.quantity }
-                : i
-            ),
-          };
+      addItem: (item) => {
+        const currentItems = get().items;
+        const existingItem = currentItems.find((i) => i.id === item.id);
+
+        let newItems;
+        if (existingItem) {
+          // Если товар уже есть, увеличиваем количество
+          // Округляем до 3 знаков, чтобы не было 0.30000004
+          const newQty = Number((existingItem.quantity + item.quantity).toFixed(3));
+          newItems = currentItems.map((i) =>
+            i.id === item.id ? { ...i, quantity: newQty } : i
+          );
+        } else {
+          newItems = [...currentItems, item];
         }
-        return { items: [...state.items, item] };
-      }),
 
-      removeItem: (id) => set((state) => ({
-        items: state.items.filter((i) => i.id !== id),
-      })),
+        // ПЕРЕСЧЕТ СУММЫ
+        const total = newItems.reduce((sum, i) => sum + i.priceRub * i.quantity, 0);
 
-      updateQuantity: (id, quantity) => set((state) => ({
-        items: state.items.map((i) =>
-          i.id === id ? { ...i, quantity } : i
-        ),
-      })),
+        set({ items: newItems, total });
+      },
 
-      clearCart: () => set({ items: [] }),
+      removeItem: (id) => {
+        const newItems = get().items.filter((i) => i.id !== id);
+        // ПЕРЕСЧЕТ СУММЫ
+        const total = newItems.reduce((sum, i) => sum + i.priceRub * i.quantity, 0);
+        set({ items: newItems, total });
+      },
 
-      totalItems: () => get().items.reduce((acc, item) => acc + (item.unit === 'pcs' ? item.quantity : 1), 0),
+      updateQuantity: (id, quantity) => {
+        const newItems = get().items.map((i) =>
+          i.id === id ? { ...i, quantity: quantity } : i
+        );
+        // ПЕРЕСЧЕТ СУММЫ
+        const total = newItems.reduce((sum, i) => sum + i.priceRub * i.quantity, 0);
+        set({ items: newItems, total });
+      },
 
-      totalPrice: () => get().items.reduce((acc, item) => {
-        if (item.unit === 'kg') {
-           // Цена за кг * граммы / 1000
-           return acc + (item.priceRub * item.quantity) / 1000;
-        }
-        return acc + item.priceRub * item.quantity;
-      }, 0),
+      clearCart: () => set({ items: [], total: 0 }),
     }),
     {
-      name: 'cheese-cart',
+      name: 'cart-storage',
       storage: createJSONStorage(() => localStorage),
     }
   )

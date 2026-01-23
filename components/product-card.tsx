@@ -25,9 +25,11 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
 
+    // ИСПРАВЛЕНИЕ: Если товар весовой, переводим граммы в КГ (делим на 1000)
+    // Если avgPackWeightGrams нет, берем 100г (0.1 кг)
     const step = product.unit === 'pcs'
       ? 1
-      : (product.avgPackWeightGrams || 100);
+      : (product.avgPackWeightGrams || 100) / 1000;
 
     addItem({
       id: product.id,
@@ -44,7 +46,6 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link href={`/product/${product.id}`} className="group block h-full">
-      {/* ИЗМЕНЕНИЯ: rounded-2xl, border-none, hover:-translate-y-1 */}
       <div className="flex h-full flex-col overflow-hidden rounded-2xl border-none bg-card text-card-foreground shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
 
         {/* Картинка */}
@@ -60,7 +61,6 @@ export function ProductCard({ product }: ProductCardProps) {
              <div className="flex h-full items-center justify-center text-muted-foreground">Нет фото</div>
           )}
 
-          {/* Бейдж "Нет в наличии" поверх картинки */}
           {product.remainder <= 0 && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
                 <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-600">

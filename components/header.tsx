@@ -4,11 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShoppingCart, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-// ВАЖНО: Используем новый хук useCart (а не useCartStore)
 import { useCart } from "@/store/cart";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
-// Импорт компонентов мобильного меню (убедитесь, что npx shadcn@latest add sheet выполнен)
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function Header() {
@@ -16,7 +14,6 @@ export function Header() {
   const cart = useCart();
   const [mounted, setMounted] = useState(false);
 
-  // Решаем проблему гидратации
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -33,8 +30,9 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
 
         {/* Логотип */}
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-           🧀 CheeseShop
+        <Link href="/" className="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity">
+           🧀 <span className="hidden sm:inline">CheeseShop</span>
+           <span className="sm:hidden">CS</span>
         </Link>
 
         {/* Десктопное меню */}
@@ -45,7 +43,7 @@ export function Header() {
               href={route.href}
               className={cn(
                 "text-sm font-medium transition-colors hover:text-primary",
-                pathname === route.href ? "text-black" : "text-muted-foreground"
+                pathname === route.href ? "text-foreground" : "text-muted-foreground"
               )}
             >
               {route.label}
@@ -56,11 +54,17 @@ export function Header() {
         {/* Правая часть: Корзина и Мобильное меню */}
         <div className="flex items-center gap-4">
           <Link href="/cart">
-            <Button variant="outline" size="icon" className="relative">
+            {/* ИЗМЕНЕНИЯ: Убрали rounded-full, добавили текст "Корзина" */}
+            <Button variant="outline" className="relative gap-2 border-primary/20 hover:border-primary hover:bg-primary/5">
               <ShoppingCart className="h-5 w-5" />
+
+              {/* Текст виден только на экранах больше мобильного */}
+              <span className="hidden sm:inline font-semibold">Корзина</span>
+
+              {/* Бейдж с количеством */}
               {mounted && cart.items.length > 0 && (
-                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
-                  {cart.totalItems()}
+                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground shadow-md animate-in zoom-in">
+                  {cart.items.length}
                 </span>
               )}
             </Button>
@@ -70,24 +74,31 @@ export function Header() {
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
+                <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
-              <nav className="flex flex-col gap-4 mt-8">
-                {routes.map((route) => (
-                  <Link
-                    key={route.href}
-                    href={route.href}
-                    className={cn(
-                        "text-lg font-medium",
-                        pathname === route.href ? "text-primary" : "text-muted-foreground"
-                    )}
-                  >
-                    {route.label}
-                  </Link>
-                ))}
-              </nav>
+              <div className="flex flex-col gap-6 mt-8">
+                <Link href="/" className="font-bold text-xl mb-4">
+                  🧀 CheeseShop
+                </Link>
+                <nav className="flex flex-col gap-4">
+                  {routes.map((route) => (
+                    <Link
+                      key={route.href}
+                      href={route.href}
+                      className={cn(
+                          "text-lg font-medium py-2 px-4 rounded-lg transition-colors",
+                          pathname === route.href
+                            ? "bg-secondary text-foreground"
+                            : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                      )}
+                    >
+                      {route.label}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
             </SheetContent>
           </Sheet>
         </div>
