@@ -1,80 +1,111 @@
-import Link from 'next/link';
-import { Button } from "@/components/ui/button";
+import { ReactNode } from "react";
+import Link from "next/link";
 import {
   LayoutDashboard,
+  ShoppingCart,
   Package,
-  ShoppingBag,
-  Settings,
-  LogOut,
+  Layers,
   ChefHat,
-  PieChart
+  UtensilsCrossed,
+  LogOut,
+  Menu
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { logout } from "./login/actions";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+// Компонент навигации (без изменений)
+function AdminNav({ className }: { className?: string }) {
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      {/* Sidebar */}
-      {/* shrink-0: Запрещает меню сжиматься или растягиваться. Оно всегда будет ровно w-64 (256px) */}
-      <aside className="w-36 shrink-0 bg-slate-900 text-white p-6 flex flex-col min-h-screen">
-        <div className="mb-8">
-          <h1 className="text-xl font-bold">🧀 Admin Panel</h1>
-        </div>
+    <nav className={`flex flex-col gap-2 p-4 ${className}`}>
+      <div className="mb-6 px-2 flex items-center gap-2 font-bold text-xl text-primary">
+        🧀 AdminPanel
+      </div>
 
-        <nav className="space-y-2 flex-1">
-          <Link href="/admin">
-            <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800">
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              Обзор
-            </Button>
-          </Link>
-          <Link href="/admin/orders">
-            <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800">
-              <ShoppingBag className="mr-2 h-4 w-4" />
-              Заказы
-            </Button>
-          </Link>
-          <Link href="/admin/products">
-            <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800">
-              <Package className="mr-2 h-4 w-4" />
-              Товары
-            </Button>
-          </Link>
-          <Link href="/admin/categories">
-            <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800">
-              <Settings className="mr-2 h-4 w-4" />
-              Категории каталога
-            </Button>
-          </Link>
+      <Link href="/admin">
+        <Button variant="ghost" className="w-full justify-start gap-2">
+          <LayoutDashboard className="h-4 w-4" />
+          Обзор
+        </Button>
+      </Link>
 
-          <Link href="/admin/product-groups">
-            <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800">
-              <PieChart className="mr-2 h-4 w-4" />
-              Конструктор тарелок
-            </Button>
-          </Link>
+      <Link href="/admin/orders">
+        <Button variant="ghost" className="w-full justify-start gap-2">
+          <ShoppingCart className="h-4 w-4" />
+          Заказы
+        </Button>
+      </Link>
 
-          <Link href="/admin/recipes">
-            <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800">
-              <ChefHat className="mr-2 h-4 w-4" />
-              Рецепты
-            </Button>
-          </Link>
-        </nav>
+      <div className="my-2 border-t border-border/50" />
+      <p className="px-2 text-xs font-semibold text-muted-foreground mb-1">Каталог</p>
 
-        <div className="pt-6 border-t border-slate-700">
-           <Link href="/">
-            <Button variant="outline" className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white">
-              <LogOut className="mr-2 h-4 w-4" />
-              На сайт
+      <Link href="/admin/products">
+        <Button variant="ghost" className="w-full justify-start gap-2">
+          <Package className="h-4 w-4" />
+          Товары
+        </Button>
+      </Link>
+      <Link href="/admin/categories">
+        <Button variant="ghost" className="w-full justify-start gap-2">
+          <Layers className="h-4 w-4" />
+          Категории
+        </Button>
+      </Link>
+      <Link href="/admin/product-groups">
+        <Button variant="ghost" className="w-full justify-start gap-2">
+          <UtensilsCrossed className="h-4 w-4" />
+          Конструктор тарелок
+        </Button>
+      </Link>
+
+      <Link href="/admin/recipes">
+        <Button variant="ghost" className="w-full justify-start gap-2">
+          <ChefHat className="h-4 w-4" />
+          Рецепты
+        </Button>
+      </Link>
+
+      <div className="mt-auto pt-4 border-t border-border">
+        <form action={logout}>
+          <Button variant="outline" className="w-full gap-2 text-red-500 hover:text-red-600 hover:bg-red-50">
+            <LogOut className="h-4 w-4" />
+            Выйти
+          </Button>
+        </form>
+      </div>
+    </nav>
+  );
+}
+
+export default function AdminLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-screen bg-secondary/10 flex flex-col md:flex-row">
+
+      {/* 1. Мобильная шапка (видна только на мобильных) */}
+      <header className="md:hidden flex items-center border-b bg-background px-4 h-14 sticky top-0 z-50">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
             </Button>
-           </Link>
-        </div>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-64">
+            <AdminNav />
+          </SheetContent>
+        </Sheet>
+        <span className="ml-4 font-semibold">Панель управления</span>
+      </header>
+
+      {/* 2. Десктопный сайдбар (стоит рядом с контентом, не поверх) */}
+      <aside className="hidden md:block w-64 border-r bg-background flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
+        <AdminNav className="h-full" />
       </aside>
 
-      {/* Main Content */}
-      {/* flex-1: Занимает всё оставшееся свободное место */}
-      <main className="flex-1 p-8 overflow-auto">
-        {children}
+      {/* 3. Основной контент */}
+      <main className="flex-1 min-w-0">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto">
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -1,115 +1,97 @@
-'use server';
+'use server'
 
-// Если вдруг понадобится сохранять в БД, раскомментируй импорт:
-// import { prisma } from '@/lib/prisma';
+import { prisma } from "@/lib/prisma";
+import { sendTelegramNotification } from "@/lib/telegram";
+import { revalidatePath } from "next/cache";
 
-interface OrderItem {
+// Типы данных, приходящих с фронтенда
+interface CartItem {
   id: string;
   name: string;
-  quantity: number;
   priceRub: number;
+  quantity: number;
   unit: string;
 }
 
-interface CustomerData {
-  name: string;
-  phone: string;
-  address: string;     // Адрес или "Самовывоз"
-  comment?: string;
-  deliveryType: 'delivery' | 'pickup';
-}
-
-interface OrderPayload {
-  items: OrderItem[];
-  customer: CustomerData;
+interface OrderData {
+  items: CartItem[];
   total: number;
+  customer: {
+    name: string;
+    phone: string;
+    deliveryType: 'delivery' | 'pickup';
+    address: string;
+    comment: string;
+  };
 }
 
-export async function placeOrder(data: OrderPayload) {
+export async function placeOrder(data: OrderData) {
   try {
-    // 1. Проверка данных
-    if (!data.items || data.items.length === 0) {
-      return { success: false, error: 'Корзина пуста' };
-    }
-    if (!data.customer.name || !data.customer.phone) {
-      return { success: false, error: 'Не заполнены обязательные поля' };
-    }
+    // 1. Сохраняем заказ в Базу Данных
+    // Используем точные названия полей из schema.prisma
+    const order = await prisma.order.create({
+      data: {
+        status: 'new',
 
-    // 2. Формируем сообщение для Telegram
-    const emoji = data.customer.deliveryType === 'delivery' ? '🚚 Доставка' : '🏪 Самовывоз';
-    const date = new Date().toLocaleString('ru-RU', { timeZone: 'Asia/Krasnoyarsk' }); // Или твой часовой пояс
+        // В схеме поле называется totalRub (Int)
+        totalRub: Math.round(data.total),
 
-    let message = `<b>Новый заказ!</b>\n`;
-    message += `📅 ${date}\n`;
-    message += `----------------\n`;
-    message += `👤 <b>${data.customer.name}</b>\n`;
-    message += `📞 <a href="tel:${data.customer.phone}">${data.customer.phone}</a>\n`;
-    message += `Тип: <b>${emoji}</b>\n`;
+        // Поля total в схеме НЕТ, удаляем его, чтобы не было ошибки
 
-    if (data.customer.deliveryType === 'delivery') {
-        message += `📍 Адрес: ${data.customer.address}\n`;
-    }
+        customerName: data.customer.name,
+        customerPhone: data.customer.phone,
+        customerAddress: data.customer.address,
 
-    if (data.customer.comment) {
-        message += `💬 Комментарий: "${data.customer.comment}"\n`;
-    }
+        // В схеме поле называется customerComment
+        customerComment: data.customer.comment,
 
-    message += `----------------\n`;
-    message += `<b>Состав заказа:</b>\n`;
+        // В схеме поле называется deliveryMethod
+        deliveryMethod: data.customer.deliveryType,
 
-    data.items.forEach((item, index) => {
-      // Форматируем кол-во: если кг, то с долями, если шт, то целое
-      const qtyStr = item.unit === 'kg'
-        ? `${item.quantity.toFixed(2)} кг`
-        : `${item.quantity} шт`;
+        items: {
+          create: data.items.map((item) => ({
+             // Связь с продуктом обязательна по схеме
+             productId: item.id,
 
-      const sum = Math.round(item.priceRub * item.quantity).toLocaleString('ru-RU');
-
-      message += `${index + 1}. ${item.name}\n`;
-      message += `   └ ${qtyStr} x ${item.priceRub} ₽ = ${sum} ₽\n`;
-    });
-
-    message += `----------------\n`;
-    message += `💰 <b>ИТОГО: ${Math.round(data.total).toLocaleString('ru-RU')} ₽</b>`;
-
-    // 3. Отправляем в Telegram
-    const token = process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
-
-    if (!token || !chatId) {
-      console.error('Telegram keys are missing in .env');
-      // Возвращаем ошибку клиенту, чтобы он знал, что заказ не ушел
-      return { success: false, error: 'Ошибка сервера: не настроены уведомления.' };
-    }
-
-    const url = `https://api.telegram.org/bot${token}/sendMessage`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+             // Маппинг полей OrderItem согласно schema.prisma:
+             productName: item.name,      // было name
+             unit: item.unit,             // обязательное поле
+             quantity: item.quantity,
+             priceRub: Math.round(item.priceRub), // было price
+             lineTotalRub: Math.round(item.priceRub * item.quantity), // было total
+          }))
+        }
       },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-        parse_mode: 'HTML',
-      }),
+      include: { items: true }
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('Telegram API error:', errText);
-      return { success: false, error: 'Не удалось отправить заказ. Попробуйте связаться по телефону.' };
+    // 2. Отправляем уведомление в Telegram
+    try {
+        await sendTelegramNotification({
+            id: order.id.slice(-6).toUpperCase(),
+            customerName: order.customerName,
+            phone: order.customerPhone,
+            deliveryMethod: order.deliveryMethod, // Используем значение из созданного заказа
+            address: order.customerAddress,
+            comment: order.customerComment,
+            totalAmount: order.totalRub,
+            items: order.items.map(item => ({
+                name: item.productName,
+                quantity: item.quantity,
+                price: item.priceRub
+            }))
+        });
+    } catch (tgError) {
+        console.error("Ошибка отправки в Telegram:", tgError);
     }
 
-    // 4. (Опционально) Сохранение в БД
-    // Если решишь сохранять заказы для истории, добавь код prisma.order.create здесь.
-    // Пока что возвращаем успех, так как платежи и ЛК не нужны.
+    // 3. Обновляем страницу заказов в админке
+    revalidatePath('/admin/orders');
 
-    return { success: true };
+    return { success: true, orderId: order.id };
 
   } catch (error) {
-    console.error('Place order exception:', error);
-    return { success: false, error: 'Произошла непредвиденная ошибка.' };
+    console.error("Ошибка создания заказа:", error);
+    return { success: false, error: 'Не удалось создать заказ. Попробуйте позвонить нам.' };
   }
 }

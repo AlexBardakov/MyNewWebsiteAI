@@ -54,14 +54,9 @@ export function Header() {
         {/* Правая часть: Корзина и Мобильное меню */}
         <div className="flex items-center gap-4">
           <Link href="/cart">
-            {/* ИЗМЕНЕНИЯ: Убрали rounded-full, добавили текст "Корзина" */}
             <Button variant="outline" className="relative gap-2 border-primary/20 hover:border-primary hover:bg-primary/5">
               <ShoppingCart className="h-5 w-5" />
-
-              {/* Текст виден только на экранах больше мобильного */}
               <span className="hidden sm:inline font-semibold">Корзина</span>
-
-              {/* Бейдж с количеством */}
               {mounted && cart.items.length > 0 && (
                 <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground shadow-md animate-in zoom-in">
                   {cart.items.length}
@@ -73,7 +68,8 @@ export function Header() {
           {/* Мобильное меню */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
+              {/* ДОБАВЛЕНО: suppressHydrationWarning для подавления ошибки ID */}
+              <Button variant="ghost" size="icon" className="md:hidden" suppressHydrationWarning>
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>

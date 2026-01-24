@@ -9,16 +9,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { DeliveryMap } from '@/components/delivery-map';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, total, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
 
-  // Состояние формы
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -27,7 +27,6 @@ export default function CheckoutPage() {
     comment: ''
   });
 
-  // Если корзина пуста, редиректим (или показываем сообщение)
   if (items.length === 0) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
@@ -39,8 +38,13 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
+    if (formData.deliveryType === 'delivery' && !formData.address) {
+        toast.error("Пожалуйста, укажите адрес доставки");
+        return;
+    }
+
+    setLoading(true);
     try {
       const res = await placeOrder({
         items,
@@ -49,8 +53,8 @@ export default function CheckoutPage() {
       });
 
       if (res.success) {
-        clearCart(); // Очищаем корзину
-        router.push('/checkout/success'); // Переходим на страницу успеха
+        clearCart();
+        router.push('/checkout/success');
       } else {
         toast.error(res.error || 'Ошибка при оформлении');
       }
@@ -71,7 +75,7 @@ export default function CheckoutPage() {
       <h1 className="text-3xl font-bold mb-8">Оформление заказа</h1>
 
       <div className="grid md:grid-cols-12 gap-8">
-        {/* Форма */}
+        {/* Левая колонка: Форма */}
         <div className="md:col-span-7 bg-card border border-secondary rounded-3xl p-6 shadow-sm h-fit">
           <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -83,7 +87,7 @@ export default function CheckoutPage() {
                   <Input
                     id="name"
                     required
-                    placeholder="Иван Иванов"
+                    placeholder="Иван"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                   />
@@ -132,21 +136,43 @@ export default function CheckoutPage() {
               </RadioGroup>
 
               {formData.deliveryType === 'delivery' ? (
-                 <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                    <Label htmlFor="address">Адрес доставки *</Label>
-                    <Textarea
-                      id="address"
-                      required
-                      placeholder="Улица, дом, подъезд, этаж..."
-                      className="min-h-[80px]"
-                      value={formData.address}
-                      onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    />
+                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+
+                    <div className="space-y-2">
+                        <Label>Укажите адрес на карте или введите вручную</Label>
+                        {/* Карта */}
+                        <DeliveryMap
+                            className="h-[300px] w-full"
+                            address={formData.address}
+                            onAddressSelect={(addr) => setFormData({...formData, address: addr})}
+                            // Сюда в будущем можно передать зоны
+                            // zones={[{ polygon: [...], name: 'Зеленая зона' }]}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="address">Адрес доставки *</Label>
+                        <div className="relative">
+                            <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Textarea
+                              id="address"
+                              required
+                              placeholder="Город, улица, дом, подъезд..."
+                              className="min-h-[80px] pl-10 pt-2"
+                              value={formData.address}
+                              onChange={(e) => setFormData({...formData, address: e.target.value})}
+                            />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Нажмите на карту, чтобы автоматически определить адрес.
+                        </p>
+                    </div>
                  </div>
               ) : (
                 <div className="p-4 bg-secondary/30 rounded-xl text-sm text-muted-foreground animate-in fade-in slide-in-from-top-2">
                   📍 Забрать заказ можно по адресу: <br/>
-                  <span className="font-medium text-foreground">пр. Комсомольский, 48</span>
+                  <span className="font-medium text-foreground">г. Томск, пр. Комсомольский, 48</span><br/>
+                  <span className="text-xs">Ежедневно с 10:00 до 20:00</span>
                 </div>
               )}
             </div>
@@ -155,7 +181,7 @@ export default function CheckoutPage() {
               <Label htmlFor="comment">Комментарий к заказу</Label>
               <Textarea
                 id="comment"
-                placeholder="Пожелания по упаковке, время доставки..."
+                placeholder="Код домофона, время доставки, пожелания по упаковке..."
                 value={formData.comment}
                 onChange={(e) => setFormData({...formData, comment: e.target.value})}
               />
@@ -172,22 +198,22 @@ export default function CheckoutPage() {
               )}
             </Button>
             <p className="text-xs text-center text-muted-foreground">
-              Нажимая кнопку, вы соглашаетесь на обработку персональных данных.
+              Нажимая кнопку, вы принимаете <Link href="/oferta" className="underline hover:text-foreground">Оферту</Link> и соглашаетесь на обработку <Link href="/privacy" className="underline hover:text-foreground">персональных данных</Link>.
             </p>
           </form>
         </div>
 
-        {/* Сводка заказа (справа) */}
+        {/* Правая колонка: Сводка */}
         <div className="md:col-span-5">
           <div className="bg-secondary/10 rounded-3xl p-6 sticky top-24">
             <h2 className="text-xl font-bold mb-4">Ваш заказ</h2>
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
               {items.map((item) => (
-                <div key={item.id} className="flex justify-between text-sm">
-                  <span>
+                <div key={item.id} className="flex justify-between text-sm group">
+                  <span className="group-hover:text-primary transition-colors">
                     {item.name} <span className="text-muted-foreground">x {item.unit === 'kg' ? item.quantity.toFixed(3) : item.quantity}</span>
                   </span>
-                  <span className="font-medium">
+                  <span className="font-medium whitespace-nowrap ml-2">
                     {Math.round(item.priceRub * item.quantity).toLocaleString('ru-RU')} ₽
                   </span>
                 </div>
@@ -199,6 +225,11 @@ export default function CheckoutPage() {
                 <span>Итого</span>
                 <span>{Math.round(total).toLocaleString('ru-RU')} ₽</span>
               </div>
+              {formData.deliveryType === 'delivery' && (
+                  <p className="text-xs text-muted-foreground text-right">
+                      * Стоимость доставки рассчитывается менеджером
+                  </p>
+              )}
             </div>
           </div>
         </div>
