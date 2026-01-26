@@ -1,103 +1,159 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useCart } from "@/store/cart";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { toast } from "sonner";
+import { Plus, Minus, ShoppingCart, Weight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { ProductDetailsModal, Product } from "@/components/product-details-modal";
 
 interface ProductCardProps {
-  product: {
-    id: string;
-    name: string;
-    priceRub: number;
-    unit: string;
-    imageUrl: string | null;
-    avgPackWeightGrams: number | null;
-    remainder: number;
-  };
+  product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const addItem = useCart((state) => state.addItem);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const cart = useCart();
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const cartItem = cart.items.find((item) => item.id === product.id);
+  const quantity = cartItem?.quantity ?? 0;
+  const isWeighable = product.unit === "kg";
 
-    // ИСПРАВЛЕНИЕ: Если товар весовой, переводим граммы в КГ (делим на 1000)
-    // Если avgPackWeightGrams нет, берем 100г (0.1 кг)
-    const step = product.unit === 'pcs'
-      ? 1
-      : (product.avgPackWeightGrams || 100) / 1000;
-
-    addItem({
+  const handleAdd = () => {
+    const stepToAdd = product.step || 1;
+    cart.addItem({
       id: product.id,
       name: product.name,
       priceRub: product.priceRub,
-      quantity: step,
       unit: product.unit,
       image: product.imageUrl || undefined,
-      step: step,
+      step: product.step || undefined,
+      quantity: stepToAdd,
     });
-
-    toast.success(`В корзину: ${product.name}`);
   };
 
-  return (
-    <Link href={`/product/${product.id}`} className="group block h-full">
-      <div className="flex h-full flex-col overflow-hidden rounded-2xl border-none bg-card text-card-foreground shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+  const handleRemove = () => cart.removeItem(product.id);
 
-        {/* Картинка */}
-        <div className="relative aspect-square overflow-hidden bg-secondary/30">
+  return (
+    <>
+      <div
+          className="group relative flex flex-col h-full bg-card rounded-2xl border border-border/50 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/30 hover:-translate-y-1 overflow-hidden cursor-pointer"
+          onClick={() => setIsModalOpen(true)}
+      >
+
+        {/* Фото */}
+        <div className="relative aspect-[4/3] overflow-hidden bg-white">
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
               alt={product.name}
               fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
-             <div className="flex h-full items-center justify-center text-muted-foreground">Нет фото</div>
-          )}
-
-          {product.remainder <= 0 && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
-                <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-600">
-                    Раскупили
-                </span>
+            <div className="flex h-full items-center justify-center text-muted-foreground/30">
+              <ShoppingBagIcon className="w-12 h-12" />
             </div>
           )}
+
+          <div className="absolute top-3 left-3 z-10">
+              {isWeighable ? (
+                   <Badge variant="secondary" className="backdrop-blur-md bg-white/80 text-black shadow-sm font-medium">
+                      <Weight className="w-3 h-3 mr-1" />
+                      Весовой
+                   </Badge>
+              ) : null}
+          </div>
         </div>
 
         {/* Контент */}
-        <div className="flex flex-1 flex-col p-5">
-          <h3 className="mb-2 text-lg font-medium leading-tight text-gray-900 group-hover:text-primary transition-colors">
-            {product.name}
-          </h3>
+        <div className="flex flex-col flex-grow p-5 relative">
+          <div className="flex-grow relative">
+              <h3 className="font-bold text-xl leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                {product.name}
+              </h3>
+              {product.description && (
+                <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+                  {product.description}
+                </p>
+              )}
+          </div>
 
-          <div className="mt-auto pt-4 flex items-center justify-between">
+          {/* Цена и кнопки */}
+          <div
+             className="pt-4 mt-4 border-t border-border/50 flex items-center justify-between gap-2"
+             onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex flex-col">
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-2xl font-bold text-primary leading-none">
                 {product.priceRub} ₽
               </span>
-              <span className="text-xs text-muted-foreground">
-                за {product.unit === 'kg' ? 'кг' : 'шт'}
+              <span className="text-xs text-muted-foreground font-medium mt-1">
+                 {isWeighable ? "за 1 кг" : "за 1 шт."}
               </span>
             </div>
 
-            {product.remainder > 0 && (
-                <Button
+            {quantity === 0 ? (
+              <Button
+                  onClick={handleAdd}
                   size="icon"
-                  onClick={handleAddToCart}
-                  className="h-10 w-10 rounded-full shadow-sm hover:shadow-md transition-shadow"
+                  className="h-11 w-11 rounded-full shadow-md transition-all active:scale-95 bg-primary hover:bg-primary/90 hover:shadow-lg"
+              >
+                <ShoppingCart className="h-5 w-5 text-white" />
+              </Button>
+            ) : (
+              <div className="flex items-center gap-1 bg-secondary/60 rounded-full p-1 shadow-inner border border-border/50">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-full bg-white shadow-sm hover:bg-white/90 transition-colors"
+                  onClick={handleRemove}
                 >
-                  <Plus className="h-5 w-5" />
+                  <Minus className="h-4 w-4" />
                 </Button>
+
+                {/* ИСПРАВЛЕНИЕ: Добавили подпись кг/шт */}
+                <div className="flex flex-col items-center min-w-[2.5rem]">
+                    <span className="text-center font-bold text-sm tabular-nums leading-none">
+                    {isWeighable
+                        ? (quantity).toFixed(2)
+                        : quantity}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-medium">
+                        {isWeighable ? "кг" : "шт"}
+                    </span>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-full bg-white shadow-sm hover:bg-white/90 transition-colors"
+                  onClick={handleAdd}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             )}
           </div>
         </div>
       </div>
-    </Link>
+
+      <ProductDetailsModal
+          product={product}
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+      />
+    </>
   );
+}
+
+function ShoppingBagIcon({ className }: { className?: string }) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" />
+        </svg>
+    )
 }
