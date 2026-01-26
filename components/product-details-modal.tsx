@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Minus, ShoppingCart, Weight, X } from "lucide-react";
+import { Plus, Minus, ShoppingCart, X, Weight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/store/cart";
 import { cn } from "@/lib/utils";
@@ -57,138 +57,146 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl w-[95vw] p-0 gap-0 overflow-hidden bg-white sm:rounded-3xl border-none shadow-2xl h-[90vh] md:h-[600px] flex flex-col md:block">
+      {/* ИЗМЕНЕНИЯ:
+         1. md:items-start — чтобы левая и правая колонка не растягивали друг друга.
+         2. h-auto md:h-fit — высота окна подстраивается под контент, но не на весь экран жестко.
+      */}
+      <DialogContent className="!max-w-4xl w-[95vw] p-0 gap-0 overflow-hidden bg-white sm:rounded-2xl border-none shadow-xl flex flex-col md:flex-row md:items-start h-auto max-h-[90vh] md:max-h-fit">
+
+        <DialogTitle className="sr-only">{product.name}</DialogTitle>
+        <DialogDescription className="sr-only">Детали товара</DialogDescription>
 
         <button
             onClick={() => onOpenChange(false)}
-            className="absolute right-4 top-4 z-50 p-2 bg-black/10 hover:bg-black/20 rounded-full transition-colors backdrop-blur-sm"
+            className="absolute right-4 top-4 z-50 p-2 bg-black/5 hover:bg-black/10 rounded-full transition-colors backdrop-blur-sm md:hidden"
         >
             <X className="w-5 h-5 text-black/70" />
         </button>
 
-        {/* АДАПТИВНАЯ СЕТКА: На мобильном flex-col, на десктопе grid */}
-        <div className="flex flex-col md:grid md:grid-cols-[55%_45%] h-full">
-
-          {/* ЛЕВАЯ ЧАСТЬ: Фото */}
-          {/* На мобильном фиксированная высота, на десктопе полная */}
-          <div className="relative w-full h-[250px] md:h-full bg-secondary/10 flex-shrink-0">
-            {product.imageUrl ? (
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 60vw"
-                priority
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground/20">
-                <Weight className="w-24 h-24" />
-              </div>
-            )}
-
-             <div className="absolute top-5 left-5">
-                <Badge className="bg-white/90 text-black hover:bg-white shadow-sm text-sm px-3 py-1 backdrop-blur-md border-0">
-                   {isWeighable ? "Весовой товар" : "Штучный товар"}
-                </Badge>
+        {/* ЛЕВАЯ ЧАСТЬ (Фото):
+            - md:aspect-square: на ПК всегда квадрат.
+            - md:h-auto: высота автоматическая (исходя из ширины и aspect-ratio).
+            - sticky top-0: (опционально) если описание очень длинное, фото может "прилипнуть" сверху, но в диалоге это редко нужно. Убрал min-h-[300px] для ПК, чтобы квадрат был честным.
+        */}
+        <div className="relative w-full md:w-[40%] h-[250px] md:h-auto md:aspect-square bg-secondary/10 flex-shrink-0">
+          {product.imageUrl ? (
+            <Image
+              src={product.imageUrl}
+              alt={product.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 40vw"
+              priority
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-muted-foreground/20">
+              <Weight className="w-20 h-20" />
             </div>
+          )}
+
+           <div className="absolute top-4 left-4">
+              <Badge variant="secondary" className="bg-white/90 text-black shadow-sm text-xs px-2 py-0.5 backdrop-blur-md border-0">
+                 {isWeighable ? "Весовой" : "Штучный"}
+              </Badge>
           </div>
+        </div>
 
-          {/* ПРАВАЯ ЧАСТЬ: Контент */}
-          <div className="flex flex-col h-full bg-white overflow-hidden">
+        {/* ПРАВАЯ ЧАСТЬ (Контент):
+            - Убрал max-h жесткий, теперь он ограничен только высотой экрана через DialogContent.
+            - md:h-full: занимает всю доступную высоту квадрата картинки (или больше, если текста много).
+        */}
+        <div className="flex flex-col w-full md:w-[60%] bg-white overflow-hidden md:min-h-[400px]">
 
-             {/* Скролл контента */}
-             <div className="flex-grow overflow-y-auto custom-scrollbar p-6 md:p-10">
-                <DialogHeader className="mb-4 md:mb-6 space-y-2 md:space-y-4 text-left">
-                    <DialogTitle className="text-2xl md:text-4xl font-bold leading-tight text-gray-900">
-                        {product.name}
-                    </DialogTitle>
-
-                    <div className="flex items-baseline gap-2">
-                         <span className="text-2xl md:text-3xl font-bold text-primary">
-                            {product.priceRub} ₽
-                         </span>
-                         <span className="text-base md:text-lg text-muted-foreground font-medium">
-                            / {isWeighable ? "1 кг" : "1 шт."}
-                         </span>
-                    </div>
-                </DialogHeader>
-
-                <div className="prose prose-stone max-w-none text-sm md:text-base">
-                   {product.description ? (
-                      <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
-                        {product.description}
-                      </p>
-                   ) : (
-                     <p className="text-muted-foreground italic">Описание отсутствует</p>
-                   )}
-                </div>
-
-                {isWeighable && (
-                    <div className="mt-6 p-4 bg-blue-50/50 rounded-xl border border-blue-100 text-blue-800 text-xs md:text-sm">
-                        ℹ️ <b>Весовой товар:</b> Шаг заказа примерно <b>{step} кг</b>. Итоговый вес может незначительно отличаться.
-                    </div>
-                )}
-             </div>
-
-             {/* Футер */}
-             <div className="p-4 md:p-8 border-t border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row gap-4 items-center justify-between flex-shrink-0">
-
-                <div className="flex flex-col items-center sm:items-start w-full sm:w-auto">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1 hidden sm:block">
-                        Сумма
+           {/* Скролл только внутри текста, если он длиннее картинки/экрана */}
+           <div className="flex-grow overflow-y-auto custom-scrollbar p-6 md:p-8 max-h-[60vh] md:max-h-[500px]">
+              <div className="mb-1">
+                 {product.category && (
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        {product.category.name}
                     </span>
-                    <span className="text-xl md:text-2xl font-bold text-gray-900 tabular-nums">
-                        {quantity > 0
-                            ? Math.round(quantity * product.priceRub).toLocaleString('ru-RU')
-                            : "0"} ₽
-                    </span>
-                </div>
+                 )}
+              </div>
 
-                {quantity === 0 ? (
+              <h2 className="text-2xl md:text-3xl font-bold leading-tight text-gray-900 mb-2">
+                  {product.name}
+              </h2>
+
+              <div className="flex items-baseline gap-2 mb-6">
+                   <span className="text-xl md:text-2xl font-bold text-primary">
+                      {product.priceRub} ₽
+                   </span>
+                   <span className="text-sm text-muted-foreground">
+                      / {isWeighable ? "1 кг" : "1 шт."}
+                   </span>
+              </div>
+
+              <div className="prose prose-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                 {product.description || "Описание отсутствует."}
+              </div>
+
+              {isWeighable && (
+                  <div className="mt-6 p-3 bg-blue-50 rounded-lg text-blue-700 text-xs md:text-sm leading-snug">
+                      ℹ️ Цена указана за 1 кг. Шаг заказа: <b>{step} кг</b>.
+                  </div>
+              )}
+           </div>
+
+           {/* Футер */}
+           <div className="p-5 border-t border-gray-100 bg-gray-50/30 flex flex-col sm:flex-row gap-4 items-center justify-between mt-auto">
+
+              <div className="flex flex-col items-center sm:items-start">
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                      Сумма
+                  </span>
+                  <span className="text-xl font-bold text-gray-900 tabular-nums">
+                      {quantity > 0
+                          ? Math.round(quantity * product.priceRub).toLocaleString('ru-RU')
+                          : "0"} ₽
+                  </span>
+              </div>
+
+              <div className="w-full sm:w-auto">
+                  {quantity === 0 ? (
                     <Button
                         onClick={handleAdd}
                         size="lg"
-                        className="w-full sm:w-auto rounded-xl h-12 md:h-14 text-base md:text-lg shadow-lg shadow-primary/20"
+                        className="w-full rounded-xl shadow-md font-semibold text-base"
                     >
                       <ShoppingCart className="h-5 w-5 mr-2" />
                       В корзину
                     </Button>
                   ) : (
-                    <div className="flex items-center gap-3 bg-white rounded-xl p-1.5 shadow-sm border border-gray-200 w-full sm:w-auto justify-between sm:justify-start">
+                    <div className="flex items-center justify-between gap-3 bg-white rounded-xl p-1 shadow-sm border border-gray-200 w-full sm:w-auto min-w-[140px]">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10 md:h-11 md:w-11 rounded-lg hover:bg-gray-100 text-gray-600"
+                        className="h-10 w-10 rounded-lg hover:bg-gray-100"
                         onClick={handleRemove}
                       >
                         <Minus className="h-5 w-5" />
                       </Button>
 
-                      <div className="flex flex-col items-center min-w-[4rem]">
-                          <span className="font-bold text-lg md:text-xl tabular-nums leading-none">
+                      <div className="flex flex-col items-center min-w-[3rem]">
+                          <span className="font-bold text-lg tabular-nums leading-none">
                             {isWeighable
-                                ? quantity.toFixed(3)
+                                ? quantity.toFixed(2)
                                 : quantity}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground font-medium uppercase mt-0.5">
-                            {isWeighable ? "кг" : "шт"}
                           </span>
                       </div>
 
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10 md:h-11 md:w-11 rounded-lg hover:bg-gray-100 text-gray-600"
+                        className="h-10 w-10 rounded-lg hover:bg-gray-100"
                         onClick={handleAdd}
                       >
                         <Plus className="h-5 w-5" />
                       </Button>
                     </div>
                   )}
-            </div>
-
+              </div>
           </div>
+
         </div>
       </DialogContent>
     </Dialog>

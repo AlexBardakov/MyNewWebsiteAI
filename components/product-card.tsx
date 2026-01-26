@@ -6,7 +6,6 @@ import { useCart } from "@/store/cart";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus, ShoppingCart, Weight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { ProductDetailsModal, Product } from "@/components/product-details-modal";
 
 interface ProductCardProps {
@@ -21,7 +20,8 @@ export function ProductCard({ product }: ProductCardProps) {
   const quantity = cartItem?.quantity ?? 0;
   const isWeighable = product.unit === "kg";
 
-  const handleAdd = () => {
+  const handleAdd = (e?: React.MouseEvent) => {
+    e?.stopPropagation(); // Чтобы не открывалась модалка при клике на кнопку
     const stepToAdd = product.step || 1;
     cart.addItem({
       id: product.id,
@@ -34,64 +34,66 @@ export function ProductCard({ product }: ProductCardProps) {
     });
   };
 
-  const handleRemove = () => cart.removeItem(product.id);
+  const handleRemove = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      cart.removeItem(product.id);
+  };
 
   return (
     <>
       <div
-          className="group relative flex flex-col h-full bg-card rounded-2xl border border-border/50 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/30 hover:-translate-y-1 overflow-hidden cursor-pointer"
+          className="group relative flex flex-col h-full bg-card rounded-xl border border-border/40 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer"
           onClick={() => setIsModalOpen(true)}
       >
-
         {/* Фото */}
-        <div className="relative aspect-[4/3] overflow-hidden bg-white">
+        <div className="relative aspect-square overflow-hidden bg-secondary/5">
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
               alt={product.name}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground/30">
-              <ShoppingBagIcon className="w-12 h-12" />
+            <div className="flex h-full items-center justify-center text-muted-foreground/20">
+              <ShoppingBagIcon className="w-10 h-10" />
             </div>
           )}
 
-          <div className="absolute top-3 left-3 z-10">
-              {isWeighable ? (
-                   <Badge variant="secondary" className="backdrop-blur-md bg-white/80 text-black shadow-sm font-medium">
-                      <Weight className="w-3 h-3 mr-1" />
-                      Весовой
-                   </Badge>
-              ) : null}
-          </div>
+          {isWeighable && (
+             <div className="absolute top-2 left-2 z-10">
+                 <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-white/90 backdrop-blur-sm shadow-sm border-0">
+                    <Weight className="w-3 h-3 mr-1 opacity-70" />
+                    Весовой
+                 </Badge>
+             </div>
+          )}
         </div>
 
         {/* Контент */}
-        <div className="flex flex-col flex-grow p-5 relative">
-          <div className="flex-grow relative">
-              <h3 className="font-bold text-xl leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
+        <div className="flex flex-col flex-grow p-3 md:p-4 gap-2">
+          <div className="flex-grow">
+              {/* Название */}
+              <h3 className="font-semibold text-sm md:text-base leading-tight group-hover:text-primary transition-colors line-clamp-2">
                 {product.name}
               </h3>
-              {product.description && (
-                <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+
+              {/* Описание: возвращено, ограничено 2 строками (line-clamp-2) */}
+              {product.description ? (
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-snug">
                   {product.description}
                 </p>
-              )}
+              ) : null}
           </div>
 
           {/* Цена и кнопки */}
-          <div
-             className="pt-4 mt-4 border-t border-border/50 flex items-center justify-between gap-2"
-             onClick={(e) => e.stopPropagation()}
-          >
+          <div className="mt-auto flex items-end justify-between gap-2 pt-1">
             <div className="flex flex-col">
-              <span className="text-2xl font-bold text-primary leading-none">
+              <span className="text-lg md:text-xl font-bold text-primary leading-none">
                 {product.priceRub} ₽
               </span>
-              <span className="text-xs text-muted-foreground font-medium mt-1">
+              <span className="text-[10px] md:text-xs text-muted-foreground font-medium mt-0.5">
                  {isWeighable ? "за 1 кг" : "за 1 шт."}
               </span>
             </div>
@@ -100,40 +102,36 @@ export function ProductCard({ product }: ProductCardProps) {
               <Button
                   onClick={handleAdd}
                   size="icon"
-                  className="h-11 w-11 rounded-full shadow-md transition-all active:scale-95 bg-primary hover:bg-primary/90 hover:shadow-lg"
+                  className="h-8 w-8 md:h-9 md:w-9 rounded-full shadow-sm bg-primary hover:bg-primary/90 shrink-0 transition-transform active:scale-95"
               >
-                <ShoppingCart className="h-5 w-5 text-white" />
+                <ShoppingCart className="h-4 w-4 md:h-5 md:w-5 text-white" />
               </Button>
             ) : (
-              <div className="flex items-center gap-1 bg-secondary/60 rounded-full p-1 shadow-inner border border-border/50">
+              <div className="flex items-center gap-1 bg-secondary/50 rounded-full p-0.5 shadow-inner border border-border/50 shrink-0" onClick={(e) => e.stopPropagation()}>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 rounded-full bg-white shadow-sm hover:bg-white/90 transition-colors"
+                  className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-white shadow-sm hover:bg-red-50 hover:text-red-500 transition-colors"
                   onClick={handleRemove}
                 >
-                  <Minus className="h-4 w-4" />
+                  <Minus className="h-3 w-3 md:h-4 md:w-4" />
                 </Button>
 
-                {/* ИСПРАВЛЕНИЕ: Добавили подпись кг/шт */}
-                <div className="flex flex-col items-center min-w-[2.5rem]">
-                    <span className="text-center font-bold text-sm tabular-nums leading-none">
+                <div className="flex flex-col items-center min-w-[1.5rem] md:min-w-[2rem]">
+                    <span className="text-center font-bold text-xs md:text-sm tabular-nums leading-none">
                     {isWeighable
-                        ? (quantity).toFixed(2)
+                        ? (quantity).toFixed(1) // Показываем 1 знак для компактности в карточке
                         : quantity}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground font-medium">
-                        {isWeighable ? "кг" : "шт"}
                     </span>
                 </div>
 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 rounded-full bg-white shadow-sm hover:bg-white/90 transition-colors"
+                  className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-white shadow-sm hover:bg-green-50 hover:text-green-600 transition-colors"
                   onClick={handleAdd}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-3 w-3 md:h-4 md:w-4" />
                 </Button>
               </div>
             )}
