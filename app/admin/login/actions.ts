@@ -1,16 +1,15 @@
+// app/admin/login/actions.ts
 'use server'
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-// Важно: имя куки должно совпадать с тем, что проверяет ваш middleware.ts
-// Обычно это 'admin_session' или 'admin_token'
 const COOKIE_NAME = "admin_session";
 
-export async function loginAction(formData: FormData) {
+// ИСПРАВЛЕНИЕ: Добавлен аргумент prevState (первый), так как useActionState передает его автоматически
+export async function loginAction(prevState: any, formData: FormData) {
   const password = formData.get("password") as string;
 
-  // Проверка пароля из .env файла
   if (password === process.env.ADMIN_PASSWORD) {
     const cookieStore = await cookies();
 
@@ -27,7 +26,6 @@ export async function loginAction(formData: FormData) {
   }
 }
 
-// Вот этой функции не хватало
 export async function logout() {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);

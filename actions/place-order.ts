@@ -1,10 +1,10 @@
+// actions/place-order.ts
 'use server'
 
 import { prisma } from "@/lib/prisma";
 import { sendTelegramNotification } from "@/lib/telegram";
 import { revalidatePath } from "next/cache";
 
-// Типы данных, приходящих с фронтенда
 interface CartItem {
   id: string;
   name: string;
@@ -27,39 +27,34 @@ interface OrderData {
 
 export async function placeOrder(data: OrderData) {
   try {
-    // 1. Сохраняем заказ в Базу Данных
-    // Используем точные названия полей из schema.prisma
+    // Подготовка товаров для БД (конвертация кг -> граммы)
+    const dbItems = data.items.map((item) => {
+      const isKg = item.unit === 'kg';
+      // Если кг, умножаем на 1000 (0.5 кг -> 500 г). Если шт, оставляем как есть.
+      const quantityForDb = isKg ? Math.round(item.quantity * 1000) : item.quantity;
+
+      return {
+        productId: item.id,
+        productName: item.name,
+        unit: item.unit,
+        quantity: quantityForDb, // В базу пишем Int (граммы или штуки)
+        priceRub: Math.round(item.priceRub),
+        lineTotalRub: Math.round(item.priceRub * item.quantity),
+      };
+    });
+
+    // 1. Сохраняем заказ в БД
     const order = await prisma.order.create({
       data: {
         status: 'new',
-
-        // В схеме поле называется totalRub (Int)
         totalRub: Math.round(data.total),
-
-        // Поля total в схеме НЕТ, удаляем его, чтобы не было ошибки
-
         customerName: data.customer.name,
         customerPhone: data.customer.phone,
         customerAddress: data.customer.address,
-
-        // В схеме поле называется customerComment
         customerComment: data.customer.comment,
-
-        // В схеме поле называется deliveryMethod
         deliveryMethod: data.customer.deliveryType,
-
         items: {
-          create: data.items.map((item) => ({
-             // Связь с продуктом обязательна по схеме
-             productId: item.id,
-
-             // Маппинг полей OrderItem согласно schema.prisma:
-             productName: item.name,      // было name
-             unit: item.unit,             // обязательное поле
-             quantity: item.quantity,
-             priceRub: Math.round(item.priceRub), // было price
-             lineTotalRub: Math.round(item.priceRub * item.quantity), // было total
-          }))
+          create: dbItems
         }
       },
       include: { items: true }
@@ -71,23 +66,23 @@ export async function placeOrder(data: OrderData) {
             id: order.id.slice(-6).toUpperCase(),
             customerName: order.customerName,
             phone: order.customerPhone,
-            deliveryMethod: order.deliveryMethod, // Используем значение из созданного заказа
+            deliveryMethod: order.deliveryMethod,
             address: order.customerAddress,
             comment: order.customerComment,
             totalAmount: order.totalRub,
-            items: order.items.map(item => ({
-                name: item.productName,
+            items: data.items.map(item => ({
+                name: item.name,
+                // Передаем в телеграм исходное количество (0.3 кг), а не граммы (300)
                 quantity: item.quantity,
-                price: item.priceRub
+                price: item.priceRub,
+                unit: item.unit // ИСПРАВЛЕНИЕ: Обязательно передаем единицу измерения
             }))
         });
     } catch (tgError) {
         console.error("Ошибка отправки в Telegram:", tgError);
     }
 
-    // 3. Обновляем страницу заказов в админке
     revalidatePath('/admin/orders');
-
     return { success: true, orderId: order.id };
 
   } catch (error) {

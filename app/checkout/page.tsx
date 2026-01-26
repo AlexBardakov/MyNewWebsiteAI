@@ -19,12 +19,21 @@ export default function CheckoutPage() {
   const { items, total, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
 
+  // Основная форма
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     deliveryType: 'delivery' as 'delivery' | 'pickup',
-    address: '',
+    address: '', // Это основной адрес с карты (Улица, дом)
     comment: ''
+  });
+
+  // Дополнительные поля для уточнений адреса
+  const [addressDetails, setAddressDetails] = useState({
+    entrance: '',
+    floor: '',
+    apartment: '',
+    intercom: '',
   });
 
   if (items.length === 0) {
@@ -45,20 +54,41 @@ export default function CheckoutPage() {
     }
 
     setLoading(true);
+
+    // Склеиваем полный адрес для отправки
+    let finalAddress = formData.address;
+    if (formData.deliveryType === 'delivery') {
+      const parts = [];
+      if (addressDetails.entrance) parts.push(`подъезд ${addressDetails.entrance}`);
+      if (addressDetails.floor) parts.push(`эт. ${addressDetails.floor}`);
+      if (addressDetails.apartment) parts.push(`кв./оф. ${addressDetails.apartment}`);
+      if (addressDetails.intercom) parts.push(`домофон ${addressDetails.intercom}`);
+
+      if (parts.length > 0) {
+        finalAddress += `, ${parts.join(', ')}`;
+      }
+    } else {
+        finalAddress = "Самовывоз";
+    }
+
     try {
       const res = await placeOrder({
         items,
         total,
-        customer: formData
+        customer: {
+            ...formData,
+            address: finalAddress
+        }
       });
 
       if (res.success) {
         clearCart();
-        router.push('/checkout/success');
+        router.push(`/checkout/success?orderId=${res.orderId || ''}`);
       } else {
         toast.error(res.error || 'Ошибка при оформлении');
       }
     } catch (error) {
+      console.error(error);
       toast.error('Произошла ошибка. Попробуйте позже.');
     } finally {
       setLoading(false);
@@ -75,6 +105,7 @@ export default function CheckoutPage() {
       <h1 className="text-3xl font-bold mb-8">Оформление заказа</h1>
 
       <div className="grid md:grid-cols-12 gap-8">
+
         {/* Левая колонка: Форма */}
         <div className="md:col-span-7 bg-card border border-secondary rounded-3xl p-6 shadow-sm h-fit">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -140,13 +171,10 @@ export default function CheckoutPage() {
 
                     <div className="space-y-2">
                         <Label>Укажите адрес на карте или введите вручную</Label>
-                        {/* Карта */}
                         <DeliveryMap
-                            className="h-[300px] w-full"
+                            className="h-[300px] w-full rounded-xl overflow-hidden border"
                             address={formData.address}
                             onAddressSelect={(addr) => setFormData({...formData, address: addr})}
-                            // Сюда в будущем можно передать зоны
-                            // zones={[{ polygon: [...], name: 'Зеленая зона' }]}
                         />
                     </div>
 
@@ -157,16 +185,54 @@ export default function CheckoutPage() {
                             <Textarea
                               id="address"
                               required
-                              placeholder="Город, улица, дом, подъезд..."
-                              className="min-h-[80px] pl-10 pt-2"
+                              placeholder="Город, улица, дом..."
+                              className="min-h-[60px] pl-10 pt-2"
                               value={formData.address}
                               onChange={(e) => setFormData({...formData, address: e.target.value})}
                             />
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            Нажмите на карту, чтобы автоматически определить адрес.
-                        </p>
                     </div>
+
+                    {/* Дополнительные поля в ряд */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="space-y-1">
+                            <Label htmlFor="entrance" className="text-xs text-muted-foreground">Подъезд</Label>
+                            <Input
+                                id="entrance"
+                                placeholder=""
+                                value={addressDetails.entrance}
+                                onChange={(e) => setAddressDetails({...addressDetails, entrance: e.target.value})}
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="floor" className="text-xs text-muted-foreground">Этаж</Label>
+                            <Input
+                                id="floor"
+                                placeholder=""
+                                value={addressDetails.floor}
+                                onChange={(e) => setAddressDetails({...addressDetails, floor: e.target.value})}
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="apartment" className="text-xs text-muted-foreground">Кв./Офис</Label>
+                            <Input
+                                id="apartment"
+                                placeholder=""
+                                value={addressDetails.apartment}
+                                onChange={(e) => setAddressDetails({...addressDetails, apartment: e.target.value})}
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="intercom" className="text-xs text-muted-foreground">Домофон</Label>
+                            <Input
+                                id="intercom"
+                                placeholder=""
+                                value={addressDetails.intercom}
+                                onChange={(e) => setAddressDetails({...addressDetails, intercom: e.target.value})}
+                            />
+                        </div>
+                    </div>
+
                  </div>
               ) : (
                 <div className="p-4 bg-secondary/30 rounded-xl text-sm text-muted-foreground animate-in fade-in slide-in-from-top-2">
@@ -181,7 +247,7 @@ export default function CheckoutPage() {
               <Label htmlFor="comment">Комментарий к заказу</Label>
               <Textarea
                 id="comment"
-                placeholder="Код домофона, время доставки, пожелания по упаковке..."
+                placeholder="Пожелания по упаковке, время доставки..."
                 value={formData.comment}
                 onChange={(e) => setFormData({...formData, comment: e.target.value})}
               />
@@ -211,9 +277,11 @@ export default function CheckoutPage() {
               {items.map((item) => (
                 <div key={item.id} className="flex justify-between text-sm group">
                   <span className="group-hover:text-primary transition-colors">
-                    {item.name} <span className="text-muted-foreground">x {item.unit === 'kg' ? item.quantity.toFixed(3) : item.quantity}</span>
+                    {/* ИСПРАВЛЕНО: Убрал деление на 1000 */}
+                    {item.name} <span className="text-muted-foreground">x {item.unit === 'kg' ? item.quantity.toFixed(3) + ' кг' : item.quantity + ' шт'}</span>
                   </span>
                   <span className="font-medium whitespace-nowrap ml-2">
+                    {/* ИСПРАВЛЕНО: Убрал деление на 1000 */}
                     {Math.round(item.priceRub * item.quantity).toLocaleString('ru-RU')} ₽
                   </span>
                 </div>

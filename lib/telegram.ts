@@ -1,11 +1,10 @@
 // lib/telegram.ts
 
-// Описываем, какие данные нужны для уведомления
 export interface TelegramOrderData {
   id: number | string;
   customerName: string;
   phone: string;
-  deliveryMethod: "delivery" | "pickup" | string; // Можно расширить типы
+  deliveryMethod: "delivery" | "pickup" | string;
   address?: string | null;
   comment?: string | null;
   totalAmount: number;
@@ -13,6 +12,7 @@ export interface TelegramOrderData {
     name: string;
     quantity: number;
     price: number;
+    unit: string; // Добавили поле unit
   }[];
 }
 
@@ -28,20 +28,30 @@ export async function sendTelegramNotification(order: TelegramOrderData) {
   // 1. Формируем список товаров
   const itemsList = order.items
     .map((item, index) => {
-      const lineTotal = item.price * item.quantity;
-      return `${index + 1}. <b>${item.name}</b>\n   └ ${item.quantity} шт. x ${item.price} ₽ = ${lineTotal} ₽`;
+      const lineTotal = Math.round(item.price * item.quantity);
+
+      // Логика форматирования количества
+      let qtyString = "";
+      if (item.unit === 'kg') {
+        // Если это кг, показываем 3 знака (например, 0.500 кг)
+        qtyString = `${item.quantity.toFixed(3)} кг`;
+      } else {
+        // Если штуки, просто число
+        qtyString = `${item.quantity} шт.`;
+      }
+
+      return `${index + 1}. <b>${item.name}</b>\n   └ ${qtyString} x ${item.price} ₽ = ${lineTotal} ₽`;
     })
     .join("\n");
 
-  // 2. Блок доставки (показываем адрес только если это доставка)
-  // Предполагаем, что ключ доставки в базе хранится как "delivery"
+  // 2. Блок доставки
   const isDelivery = order.deliveryMethod === "delivery";
-  
+
   const deliveryInfo = isDelivery
     ? `🚚 <b>Доставка по адресу:</b>\n${order.address || "Адрес не указан"}`
     : `🏃 <b>Самовывоз</b>`;
 
-  // 3. Собираем итоговое сообщение
+  // 3. Собираем сообщение
   const message = `
 📦 <b>НОВЫЙ ЗАКАЗ #${order.id}</b>
 
@@ -66,15 +76,13 @@ ${deliveryInfo}
       body: JSON.stringify({
         chat_id: chatId,
         text: message,
-        parse_mode: "HTML", // Включает форматирование (жирный шрифт и т.д.)
+        parse_mode: "HTML",
       }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
       console.error("❌ Telegram API Error:", errorData);
-    } else {
-      console.log("✅ Уведомление в Telegram отправлено успешно.");
     }
   } catch (error) {
     console.error("❌ Ошибка сети при отправке в Telegram:", error);
