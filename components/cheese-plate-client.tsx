@@ -5,11 +5,13 @@ import Image from 'next/image';
 import { useCart } from '@/store/cart'; // Убедись, что путь к стору верный
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Loader2, Plus, RefreshCw, Trash2, Repeat } from 'lucide-react';
+import { getSuggestionsAction, buildPlateAction } from '@/actions/cheese-plate';
 
 // --- Типы ---
 export type Product = {
@@ -167,52 +169,59 @@ export default function CheesePlateClient({ initialProducts, initialCategories, 
 
   // Обновить предложения
   async function reloadSuggestions() {
-    try {
-      setSuggestionsLoading(true);
-      const res = await fetch('/api/cheese-plates/suggestions');
-      if (!res.ok) throw new Error();
-      const suggJson: SuggestionsPayload = await res.json();
-      const sugg = Array.isArray(suggJson?.suggestions) ? suggJson.suggestions.map(normalizeCheesePlate) : [];
-      setSuggestions(sugg);
-    } catch {
-      toast.error('Не удалось обновить варианты.');
-    } finally {
-      setSuggestionsLoading(false);
+  try {
+    setSuggestionsLoading(true);
+    // ВМЕСТО fetch('/api/cheese-plates/suggestions')
+    const res = await getSuggestionsAction(4);
+
+    if (!res.ok || !res.suggestions) {
+      throw new Error(res.error || 'Ошибка при загрузке');
     }
+
+    // normalizeCheesePlate можно оставить для подстраховки,
+    // но serialize на сервере уже вернул чистый JSON
+    const sugg = res.suggestions.map(normalizeCheesePlate);
+    setSuggestions(sugg);
+  } catch (e) {
+    toast.error('Не удалось обновить варианты.');
+  } finally {
+    setSuggestionsLoading(false);
   }
+}
 
   // Собрать тарелку
   async function handleBuild(e?: React.FormEvent) {
-    if (e) e.preventDefault();
-    setBuildError(null);
-    setBuilding(true);
-    setCurrentPlate(null);
+  if (e) e.preventDefault();
+  setBuildError(null);
+  setBuilding(true);
+  setCurrentPlate(null);
 
-    try {
-      const body: any = { excludeMold: !!excludeMold };
-      if (favoriteCategoryId) body.favoriteCategoryId = favoriteCategoryId;
-      if (cheeseCount.trim()) body.cheeseCount = Number(cheeseCount);
-      if (targetPriceRub.trim()) body.targetPriceRub = Number(targetPriceRub);
+  try {
+    // Подготавливаем параметры
+    const params = {
+      excludeMold: !!excludeMold,
+      favoriteCategoryId: favoriteCategoryId || undefined,
+      cheeseCount: cheeseCount.trim() ? Number(cheeseCount) : undefined,
+      targetPriceRub: targetPriceRub.trim() ? Number(targetPriceRub) : undefined,
+    };
 
-      const res = await fetch('/api/cheese-plates/build', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const json: BuildPayload = await res.json();
+    // ВМЕСТО fetch('/api/cheese-plates/build', ...)
+    const res = await buildPlateAction(params);
 
-      if (!res.ok || !json.ok || !json.plate) {
-        setBuildError(json.error || 'Не удалось собрать тарелку');
-        return;
-      }
-
-      setCurrentPlate(applyMoldFilterToPlate(normalizeCheesePlate(json.plate), excludeMold, moldProductIds));
-    } catch {
-      setBuildError('Ошибка соединения. Попробуйте еще раз.');
-    } finally {
-      setBuilding(false);
+    if (!res.ok || !res.plate) {
+      setBuildError(res.error || 'Не удалось собрать тарелку');
+      return;
     }
+
+    setCurrentPlate(
+      applyMoldFilterToPlate(normalizeCheesePlate(res.plate), excludeMold, moldProductIds)
+    );
+  } catch {
+    setBuildError('Ошибка соединения. Попробуйте еще раз.');
+  } finally {
+    setBuilding(false);
   }
+}
 
   // Действия с тарелкой
   function removeFromCurrent(id: string) {
@@ -225,44 +234,46 @@ export default function CheesePlateClient({ initialProducts, initialCategories, 
   }
 
   async function replaceInCurrent(index: number) {
-    if (!currentPlate) return;
-    setReplaceIndex(index);
-    try {
-        // Логика замены (аналогично handleBuild, но без полного сброса)
-         const body: any = { excludeMold: !!excludeMold };
-         if (favoriteCategoryId) body.favoriteCategoryId = favoriteCategoryId;
-         if (cheeseCount.trim()) body.cheeseCount = Number(cheeseCount);
-         if (targetPriceRub.trim()) body.targetPriceRub = Number(targetPriceRub);
+  if (!currentPlate) return;
+  setReplaceIndex(index);
+  try {
+     const params = {
+       excludeMold: !!excludeMold,
+       favoriteCategoryId: favoriteCategoryId || undefined,
+       cheeseCount: cheeseCount.trim() ? Number(cheeseCount) : undefined,
+       targetPriceRub: targetPriceRub.trim() ? Number(targetPriceRub) : undefined,
+     };
 
-         const res = await fetch('/api/cheese-plates/build', {
-            method: 'POST',
-            body: JSON.stringify(body),
-         });
-         const json = await res.json();
-         if(json.plate) {
-             const newPlate = applyMoldFilterToPlate(normalizeCheesePlate(json.plate), excludeMold, moldProductIds);
-             const currentIds = new Set(currentPlate.products.map(p => p.id));
-             // Ищем кандидата, которого еще нет
-             const candidate = newPlate.products.find(p => !currentIds.has(p.id)) || newPlate.products[0];
+     // ВМЕСТО fetch...
+     const res = await buildPlateAction(params);
 
-             if(candidate) {
-                setCurrentPlate(prev => {
-                    if(!prev) return prev;
-                    const next = [...prev.products];
-                    next[index] = candidate;
-                    const total = next.reduce((acc, it) => acc + (it.approxPiecePriceRub || it.priceRub || 0), 0);
-                    return { ...prev, products: next, approxTotalRub: total };
-                })
-             } else {
-                 toast.info("Не удалось найти замену с такими параметрами");
-             }
+     if (res.ok && res.plate) {
+         const newPlate = applyMoldFilterToPlate(normalizeCheesePlate(res.plate), excludeMold, moldProductIds);
+         const currentIds = new Set(currentPlate.products.map(p => p.id));
+
+         // Ищем кандидата, которого еще нет в текущей тарелке
+         const candidate = newPlate.products.find(p => !currentIds.has(p.id)) || newPlate.products[0];
+
+         if (candidate) {
+            setCurrentPlate(prev => {
+                if (!prev) return prev;
+                const next = [...prev.products];
+                next[index] = candidate;
+                const total = next.reduce((acc, it) => acc + (it.approxPiecePriceRub || it.priceRub || 0), 0);
+                return { ...prev, products: next, approxTotalRub: total };
+            })
+         } else {
+             toast.info("Не удалось найти уникальную замену с такими параметрами");
          }
-    } catch {
-        toast.error("Ошибка при замене");
-    } finally {
-        setReplaceIndex(null);
-    }
+     } else {
+         toast.error(res.error || "Не удалось подобрать замену");
+     }
+  } catch {
+      toast.error("Ошибка при замене");
+  } finally {
+      setReplaceIndex(null);
   }
+}
 
   function addPlateToCart(plate: CheesePlate) {
     if (!plate.products.length) return;
@@ -270,13 +281,31 @@ export default function CheesePlateClient({ initialProducts, initialCategories, 
 
     plate.products.forEach((it) => {
       const full = productMap.get(it.id);
+      // Проверяем наличие (вдруг кто-то уже купил, пока мы выбирали)
       if (!full || full.remainder <= 0) return;
-      const step = full.unit === 'kg' ? (full.avgPackWeightGrams || 100) : 1;
+
+      let qty = 0;
+      let step = 1;
+
+      if (full.unit === 'kg') {
+        // Берем средний вес упаковки или 200г по дефолту
+        const grams = full.avgPackWeightGrams && full.avgPackWeightGrams > 0
+          ? full.avgPackWeightGrams
+          : 200;
+
+        // ВАЖНО: Переводим граммы в килограммы для корзины (200г -> 0.2кг)
+        qty = grams / 1000;
+        step = qty; // Шаг в корзине делаем равным одному кусочку
+      } else {
+        qty = 1;
+        step = 1;
+      }
+
       addItem({
         id: full.id,
         name: full.name,
         priceRub: full.priceRub,
-        quantity: step,
+        quantity: qty,
         unit: full.unit,
         image: full.imageUrl || undefined,
         step: step

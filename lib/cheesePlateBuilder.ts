@@ -1,5 +1,5 @@
 // lib/cheesePlateBuilder.ts
-import prisma from './prisma';
+import { prisma } from '@/lib/prisma';
 
 export type CheesePlateItem = {
   id: string;
@@ -119,7 +119,7 @@ async function loadConstructorDataset(excludeMold: boolean): Promise<Constructor
       // фильтры по товару и категории
       if (!p.isActive) continue;
       if (!p.category || !p.category.isActive) continue;
-      if (p.remainder <= 0) continue;
+      if (Number(p.remainder) <= 0) continue;
       if (excludeMold && p.category.isMold) continue;
 
       let candidate = candidateById.get(p.id);
