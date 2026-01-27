@@ -15,6 +15,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/catalog',
+        permanent: true, // true - это 308 редирект (для SEO, если страница переехала навсегда)
+                         // false - если временно (307)
+      },
+    ];
+  }
 };
 
 export default nextConfig;
