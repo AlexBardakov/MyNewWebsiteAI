@@ -47,6 +47,8 @@ model Product {
   isActive           Boolean @default(true)
   displayOrder       Int     @default(0)
 
+  variants           ProductVariant[]
+
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
 
@@ -58,6 +60,16 @@ model Product {
   updatedAt DateTime @updatedAt
 
   @@index([categoryId, displayOrder])
+}
+
+model ProductVariant {
+  id        String  @id @default(uuid())
+  name      String  // Название варианта (например "С орехами", "Классический")
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
 }
 
 // ---------------------------------------------------------
@@ -111,6 +123,8 @@ model Order {
 
   totalRub    Int
   deliveryRub Int @default(0)
+
+  variant      String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

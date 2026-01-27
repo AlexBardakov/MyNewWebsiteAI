@@ -9,13 +9,38 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createProduct, updateProduct } from "./actions";
-import { Plus, Edit } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 // Добавляем проп product (опциональный)
 export function ProductDialog({ categories, product }: { categories: any[], product?: any }) {
   const [open, setOpen] = useState(false);
   const isEdit = !!product; // Если товар передан, значит мы редактируем
+
+  // Состояние для списка вариантов
+  const [variants, setVariants] = useState<string[]>([]);
+
+  // При изменении товара (или открытии) загружаем его варианты, если они есть
+  useEffect(() => {
+    if (product?.variants && Array.isArray(product.variants)) {
+      setVariants(product.variants.map((v: any) => v.name));
+    } else {
+      setVariants([]);
+    }
+  }, [product]);
+
+  // Хендлеры для управления списком вариантов
+  const addVariant = () => setVariants([...variants, ""]);
+
+  const updateVariant = (idx: number, val: string) => {
+    const newV = [...variants];
+    newV[idx] = val;
+    setVariants(newV);
+  };
+
+  const removeVariant = (idx: number) => {
+    setVariants(variants.filter((_, i) => i !== idx));
+  };
 
   async function handleSubmit(formData: FormData) {
     let res;
@@ -32,6 +57,8 @@ export function ProductDialog({ categories, product }: { categories: any[], prod
     } else {
       toast.success(isEdit ? "Товар обновлен" : "Товар создан");
       setOpen(false);
+      // Если создавали новый, очищаем форму вариантов
+      if (!isEdit) setVariants([]);
     }
   }
 
@@ -104,6 +131,42 @@ export function ProductDialog({ categories, product }: { categories: any[], prod
                 </div>
             )}
             <Input name="image" type="file" accept="image/*" />
+          </div>
+
+          {/* СЕКЦИЯ ВАРИАНТОВ */}
+          <div className="col-span-2 space-y-3 border p-4 rounded-md bg-slate-50">
+            <div className="flex items-center justify-between">
+               <div className="space-y-1">
+                   <Label>Варианты (Вкусы / Виды)</Label>
+                   <p className="text-xs text-muted-foreground">Добавьте варианты, если товар имеет разновидности (цена будет общей).</p>
+               </div>
+               <Button type="button" variant="outline" size="sm" onClick={addVariant}>
+                 <Plus className="mr-2 h-3 w-3" /> Добавить
+               </Button>
+            </div>
+
+            <div className="space-y-2">
+              {variants.length === 0 && (
+                  <div className="text-sm text-muted-foreground italic text-center py-2 border border-dashed rounded bg-white/50">
+                      Нет вариантов (товар стандартный)
+                  </div>
+              )}
+
+              {variants.map((variant, index) => (
+                <div key={index} className="flex gap-2 items-center">
+                  <Input
+                    name="variants" // Важно: этот name используется в actions.ts
+                    value={variant}
+                    onChange={(e) => updateVariant(index, e.target.value)}
+                    placeholder="Например: С паприкой"
+                    className="bg-white"
+                  />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeVariant(index)} className="hover:bg-red-50 hover:text-red-600">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="col-span-2 space-y-2">

@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus, ShoppingCart, X, Weight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label"; // Добавили Label для красоты
 import { useCart } from "@/store/cart";
+import { toast } from "sonner"; // Добавляем тосты для уведомлений
 
 export interface Product {
   id: string;
@@ -14,9 +17,10 @@ export interface Product {
   priceRub: number;
   imageUrl: string | null;
   unit: string;
-  avgPackWeightGrams?: number | null; // Убедились, что это поле есть
+  avgPackWeightGrams?: number | null;
   step?: number | null;
   categoryId?: string;
+  variants?: { id: string; name: string }[]; // Добавили массив вариантов
   [key: string]: any;
 }
 
@@ -28,21 +32,47 @@ interface ProductDetailsModalProps {
 
 export function ProductDetailsModal({ product, open, onOpenChange }: ProductDetailsModalProps) {
   const cart = useCart();
-  const cartItem = cart.items.find((item) => item.id === product.id);
+
+  // Состояние для выбранного варианта
+  const [selectedVariantId, setSelectedVariantId] = useState<string | undefined>(undefined);
 
   const isWeighable = product.unit === "kg";
+  const hasVariants = product.variants && product.variants.length > 0;
 
   // ИСПРАВЛЕНИЕ: Расчет шага
   const step = isWeighable && product.avgPackWeightGrams && product.avgPackWeightGrams > 0
       ? product.avgPackWeightGrams / 1000
       : (isWeighable ? 0.5 : 1);
 
+  // --- ЛОГИКА ВАРИАНТОВ ---
+  // Находим имя выбранного варианта
+  const selectedVariantName = hasVariants
+    ? product.variants?.find(v => v.id === selectedVariantId)?.name
+    : undefined;
+
+  // Формируем ID для поиска в корзине.
+  // Если вариант выбран -> "ID_ТОВАРА::ВАРИАНТ"
+  // Если вариантов нет -> "ID_ТОВАРА"
+  const cartItemId = hasVariants && selectedVariantName
+      ? `${product.id}::${selectedVariantName}`
+      : product.id;
+
+  // Ищем конкретную позицию в корзине
+  const cartItem = cart.items.find((item) => item.id === cartItemId);
   const quantity = cartItem?.quantity ?? 0;
 
   const handleAdd = () => {
+    // Если есть варианты, но пользователь ничего не выбрал
+    if (hasVariants && !selectedVariantId) {
+        toast.error("Пожалуйста, выберите вариант");
+        return;
+    }
+
     cart.addItem({
-      id: product.id,
+      id: cartItemId,          // Уникальный ID (возможно составной)
+      productId: product.id,   // Реальный ID товара
       name: product.name,
+      variant: selectedVariantName, // Имя варианта (если есть)
       priceRub: product.priceRub,
       unit: product.unit,
       image: product.imageUrl || undefined,
@@ -53,10 +83,10 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
 
   const handleRemove = () => {
      if (quantity - step <= 0.001) {
-         cart.removeItem(product.id);
+         cart.removeItem(cartItemId); // Удаляем по cartItemId
      } else {
          const newQty = quantity - step;
-         cart.updateQuantity(product.id, Number(newQty.toFixed(3)));
+         cart.updateQuantity(cartItemId, Number(newQty.toFixed(3)));
      }
   };
 
@@ -114,7 +144,7 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
                   {product.name}
               </h2>
 
-              <div className="flex items-baseline gap-2 mb-6">
+              <div className="flex items-baseline gap-2 mb-4">
                    <span className="text-xl md:text-2xl font-bold text-primary">
                       {product.priceRub} ₽
                    </span>
@@ -122,6 +152,34 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
                       / {isWeighable ? "1 кг" : "1 шт."}
                    </span>
               </div>
+
+              {/* СЕКЦИЯ ВЫБОРА ВАРИАНТА */}
+              {hasVariants && (
+                <div className="mb-6 space-y-3 p-4 bg-secondary/10 rounded-xl border border-secondary/20">
+                  <Label className="text-sm font-semibold text-foreground/80">
+                    Выберите вариант:
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {product.variants!.map((v) => {
+                      const isSelected = selectedVariantId === v.id;
+                      return (
+                        <div
+                          key={v.id}
+                          onClick={() => setSelectedVariantId(v.id)}
+                          className={`
+                            cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium transition-all border select-none
+                            ${isSelected
+                                ? "bg-primary text-primary-foreground border-primary shadow-sm scale-105"
+                                : "bg-white text-foreground border-border hover:border-primary/50 hover:bg-secondary/20"}
+                          `}
+                        >
+                          {v.name}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="prose prose-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                  {product.description || "Описание отсутствует."}
@@ -154,9 +212,11 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
                         onClick={handleAdd}
                         size="lg"
                         className="w-full rounded-xl shadow-md font-semibold text-base"
+                        // Блокируем кнопку, если вариант не выбран
+                        disabled={hasVariants && !selectedVariantId}
                     >
                       <ShoppingCart className="h-5 w-5 mr-2" />
-                      В корзину
+                      {hasVariants && !selectedVariantId ? "Выберите вариант" : "В корзину"}
                     </Button>
                   ) : (
                     <div className="flex items-center justify-between gap-3 bg-white rounded-xl p-1 shadow-sm border border-gray-200 w-full sm:w-auto min-w-[140px]">

@@ -7,6 +7,8 @@ import { revalidatePath } from "next/cache";
 
 interface CartItem {
   id: string;
+  productId?: string; // Новый: реальный ID товара (если id в корзине составной)
+  variant?: string;   // Новый: название варианта
   name: string;
   priceRub: number;
   quantity: number;
@@ -34,8 +36,13 @@ export async function placeOrder(data: OrderData) {
       const quantityForDb = isKg ? Math.round(item.quantity * 1000) : item.quantity;
 
       return {
-        productId: item.id,
+        // ВАЖНО: Если передан productId (для вариативных товаров), используем его.
+        // Если нет (старые товары), используем id из корзины.
+        productId: item.productId || item.id,
         productName: item.name,
+        // Сохраняем вариант, если он есть
+        variant: item.variant || null,
+
         unit: item.unit,
         quantity: quantityForDb, // В базу пишем Int (граммы или штуки)
         priceRub: Math.round(item.priceRub),
@@ -71,11 +78,13 @@ export async function placeOrder(data: OrderData) {
             comment: order.customerComment,
             totalAmount: order.totalRub,
             items: data.items.map(item => ({
-                name: item.name,
+                // ВАЖНО: Добавляем вариант к названию для Telegram, чтобы было понятно, что собирать
+                name: item.variant ? `${item.name} (${item.variant})` : item.name,
+
                 // Передаем в телеграм исходное количество (0.3 кг), а не граммы (300)
                 quantity: item.quantity,
                 price: item.priceRub,
-                unit: item.unit // ИСПРАВЛЕНИЕ: Обязательно передаем единицу измерения
+                unit: item.unit
             }))
         });
     } catch (tgError) {
