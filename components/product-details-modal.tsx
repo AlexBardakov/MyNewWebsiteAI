@@ -1,12 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus, ShoppingCart, X, Weight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/store/cart";
-import { cn } from "@/lib/utils";
 
 export interface Product {
   id: string;
@@ -57,11 +56,7 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* ИЗМЕНЕНИЯ:
-         1. md:items-start — чтобы левая и правая колонка не растягивали друг друга.
-         2. h-auto md:h-fit — высота окна подстраивается под контент, но не на весь экран жестко.
-      */}
-      <DialogContent className="!max-w-4xl w-[95vw] p-0 gap-0 overflow-hidden bg-white sm:rounded-2xl border-none shadow-xl flex flex-col md:flex-row md:items-start h-auto max-h-[90vh] md:max-h-fit">
+      <DialogContent className="!max-w-4xl w-[95vw] p-0 gap-0 bg-white rounded-2xl border-none shadow-xl flex flex-col md:flex-row md:items-start h-auto max-h-[90vh] md:max-h-fit">
 
         <DialogTitle className="sr-only">{product.name}</DialogTitle>
         <DialogDescription className="sr-only">Детали товара</DialogDescription>
@@ -73,12 +68,13 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
             <X className="w-5 h-5 text-black/70" />
         </button>
 
-        {/* ЛЕВАЯ ЧАСТЬ (Фото):
-            - md:aspect-square: на ПК всегда квадрат.
-            - md:h-auto: высота автоматическая (исходя из ширины и aspect-ratio).
-            - sticky top-0: (опционально) если описание очень длинное, фото может "прилипнуть" сверху, но в диалоге это редко нужно. Убрал min-h-[300px] для ПК, чтобы квадрат был честным.
+        {/* ЛЕВАЯ ЧАСТЬ (Фото)
+            ИЗМЕНЕНИЯ:
+            - md:rounded-2xl: теперь на ПК скруглены ВСЕ углы.
+            - md:m-1: добавил крошечный отступ, чтобы картинка не прилипала к краю окна и тексту,
+              подчеркивая, что она скруглена со всех сторон.
         */}
-        <div className="relative w-full md:w-[40%] h-[250px] md:h-auto md:aspect-square bg-secondary/10 flex-shrink-0">
+        <div className="relative w-full md:w-[40%] h-[250px] md:h-auto md:aspect-square bg-secondary/10 flex-shrink-0 overflow-hidden rounded-t-2xl md:rounded-2xl md:m-1">
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
@@ -101,13 +97,9 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
           </div>
         </div>
 
-        {/* ПРАВАЯ ЧАСТЬ (Контент):
-            - Убрал max-h жесткий, теперь он ограничен только высотой экрана через DialogContent.
-            - md:h-full: занимает всю доступную высоту квадрата картинки (или больше, если текста много).
-        */}
-        <div className="flex flex-col w-full md:w-[60%] bg-white overflow-hidden md:min-h-[400px]">
+        {/* ПРАВАЯ ЧАСТЬ (Контент) */}
+        <div className="flex flex-col w-full md:w-[60%] bg-white md:min-h-[400px] rounded-b-2xl md:rounded-r-2xl">
 
-           {/* Скролл только внутри текста, если он длиннее картинки/экрана */}
            <div className="flex-grow overflow-y-auto custom-scrollbar p-6 md:p-8 max-h-[60vh] md:max-h-[500px]">
               <div className="mb-1">
                  {product.category && (
@@ -142,7 +134,7 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
            </div>
 
            {/* Футер */}
-           <div className="p-5 border-t border-gray-100 bg-gray-50/30 flex flex-col sm:flex-row gap-4 items-center justify-between mt-auto">
+           <div className="p-5 border-t border-gray-100 bg-gray-50/30 flex flex-col sm:flex-row gap-4 items-center justify-between mt-auto rounded-b-2xl md:rounded-br-2xl md:rounded-bl-none">
 
               <div className="flex flex-col items-center sm:items-start">
                   <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
