@@ -2,9 +2,10 @@ import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RecipeDialog } from "./recipe-dialog";
-import { Trash2 } from "lucide-react";
+import { Trash2, List } from "lucide-react";
 import { deleteRecipe } from "./actions";
 import Image from "next/image";
+import Link from "next/link";
 
 export default async function AdminRecipesPage() {
   const recipes = await db.recipe.findMany({
@@ -19,7 +20,18 @@ export default async function AdminRecipesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Рецепты</h1>
-        <RecipeDialog categories={categories} products={products} />
+        <div className="flex gap-3">
+            {/* Кнопка управления категориями */}
+            <Link href="/admin/recipes/categories">
+                <Button variant="outline">
+                    <List className="mr-2 h-4 w-4" />
+                    Категории
+                </Button>
+            </Link>
+
+            {/* Диалог создания */}
+            <RecipeDialog categories={categories} products={products} />
+        </div>
       </div>
 
       <div className="rounded-md border bg-white">
@@ -43,19 +55,34 @@ export default async function AdminRecipesPage() {
                   )}
                 </TableCell>
                 <TableCell className="font-medium">{r.title}</TableCell>
-                <TableCell>{r.category?.name || "—"}</TableCell>
+                <TableCell>{r.category?.name || <span className="text-muted-foreground text-xs">Без категории</span>}</TableCell>
                 <TableCell>{r.recipeProducts.length}</TableCell>
                 <TableCell>{r.isActive ? "✅" : "❌"}</TableCell>
-                <TableCell className="text-right flex justify-end gap-2">
-                   {/* Редактирование добавим позже по аналогии с товарами */}
+                <TableCell className="text-right flex justify-end gap-1">
+
+                  {/* Кнопка Редактирования */}
+                  <RecipeDialog
+                    categories={categories}
+                    products={products}
+                    recipe={r}
+                  />
+
+                  {/* Кнопка Удаления */}
                   <form action={deleteRecipe.bind(null, r.id)}>
-                    <Button variant="ghost" size="icon" className="text-red-500">
+                    <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </form>
                 </TableCell>
               </TableRow>
             ))}
+            {recipes.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                        Рецептов пока нет. Создайте первый!
+                    </TableCell>
+                </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
