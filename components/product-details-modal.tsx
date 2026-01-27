@@ -14,6 +14,7 @@ export interface Product {
   priceRub: number;
   imageUrl: string | null;
   unit: string;
+  avgPackWeightGrams?: number | null; // Убедились, что это поле есть
   step?: number | null;
   categoryId?: string;
   [key: string]: any;
@@ -29,9 +30,14 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
   const cart = useCart();
   const cartItem = cart.items.find((item) => item.id === product.id);
 
-  const step = product.step || 1;
-  const quantity = cartItem?.quantity ?? 0;
   const isWeighable = product.unit === "kg";
+
+  // ИСПРАВЛЕНИЕ: Расчет шага
+  const step = isWeighable && product.avgPackWeightGrams && product.avgPackWeightGrams > 0
+      ? product.avgPackWeightGrams / 1000
+      : (isWeighable ? 0.5 : 1);
+
+  const quantity = cartItem?.quantity ?? 0;
 
   const handleAdd = () => {
     cart.addItem({
@@ -46,7 +52,7 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
   };
 
   const handleRemove = () => {
-     if (quantity - step <= 0.0001) {
+     if (quantity - step <= 0.001) {
          cart.removeItem(product.id);
      } else {
          const newQty = quantity - step;
@@ -68,12 +74,7 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
             <X className="w-5 h-5 text-black/70" />
         </button>
 
-        {/* ЛЕВАЯ ЧАСТЬ (Фото)
-            ИЗМЕНЕНИЯ:
-            - md:rounded-2xl: теперь на ПК скруглены ВСЕ углы.
-            - md:m-1: добавил крошечный отступ, чтобы картинка не прилипала к краю окна и тексту,
-              подчеркивая, что она скруглена со всех сторон.
-        */}
+        {/* ЛЕВАЯ ЧАСТЬ (Фото) */}
         <div className="relative w-full md:w-[40%] h-[250px] md:h-auto md:aspect-square bg-secondary/10 flex-shrink-0 overflow-hidden rounded-t-2xl md:rounded-2xl md:m-1">
           {product.imageUrl ? (
             <Image
@@ -128,7 +129,7 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
 
               {isWeighable && (
                   <div className="mt-6 p-3 bg-blue-50 rounded-lg text-blue-700 text-xs md:text-sm leading-snug">
-                      ℹ️ Цена указана за 1 кг. Шаг заказа: <b>{step} кг</b>.
+                      ℹ️ Цена указана за 1 кг. Минимальный шаг заказа для этого товара: <b>{step} кг</b>.
                   </div>
               )}
            </div>
@@ -171,8 +172,11 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
                       <div className="flex flex-col items-center min-w-[3rem]">
                           <span className="font-bold text-lg tabular-nums leading-none">
                             {isWeighable
-                                ? quantity.toFixed(2)
+                                ? quantity.toFixed(3) // 3 знака для точности
                                 : quantity}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground font-medium uppercase mt-0.5">
+                            {isWeighable ? "кг" : "шт"}
                           </span>
                       </div>
 

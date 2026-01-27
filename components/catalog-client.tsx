@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ProductCard } from '@/components/product-card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,7 @@ interface Product {
   avgPackWeightGrams: number | null;
   remainder: number;
   categoryId: string;
+  step?: number; // ИСПРАВЛЕНИЕ: Добавили поле step
 }
 
 interface CatalogClientProps {
@@ -43,10 +44,7 @@ export default function CatalogClient({ initialProducts, categories }: CatalogCl
 
   return (
     <div className="pb-20">
-      {/* 1. Sticky Меню Категорий
-        top-[60px] - примерная высота твоего Header. Если он выше/ниже, поправь это число.
-        z-30 - чтобы меню было под модалками, но над товарами.
-      */}
+      {/* 1. Sticky Меню Категорий */}
       <div className="sticky top-[60px] z-30 bg-white/80 backdrop-blur-md border-b py-3 mb-6 shadow-sm">
         <div className="container mx-auto px-4 md:px-8">
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
@@ -70,7 +68,7 @@ export default function CatalogClient({ initialProducts, categories }: CatalogCl
         </div>
       </div>
 
-      {/* 2. Основной контейнер с отступами (решает проблему прилипания к краям) */}
+      {/* 2. Основной контейнер */}
       <div className="container mx-auto px-4 md:px-8 space-y-12">
 
         {categories.map((category) => {
@@ -79,16 +77,14 @@ export default function CatalogClient({ initialProducts, categories }: CatalogCl
             (p) => p.categoryId === category.id
           );
 
-          // Если товаров в категории нет, не выводим блок
           if (categoryProducts.length === 0) return null;
 
           return (
             <section
                 key={category.id}
                 id={`category-${category.id}`}
-                className="scroll-mt-32" // Дополнительный отступ для якоря
+                className="scroll-mt-32"
             >
-              {/* 3. Явный заголовок категории */}
               <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-900 flex items-center gap-3">
                  {category.name}
                  <span className="text-sm font-normal text-muted-foreground bg-secondary/30 px-2 py-0.5 rounded-full">
@@ -96,7 +92,6 @@ export default function CatalogClient({ initialProducts, categories }: CatalogCl
                  </span>
               </h2>
 
-              {/* Сетка товаров */}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
                 {categoryProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />

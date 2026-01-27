@@ -20,23 +20,34 @@ export function ProductCard({ product }: ProductCardProps) {
   const quantity = cartItem?.quantity ?? 0;
   const isWeighable = product.unit === "kg";
 
+  // ИСПРАВЛЕНИЕ: Рассчитываем шаг прямо здесь, не полагаясь на пропсы сервера
+  const step = isWeighable && product.avgPackWeightGrams && product.avgPackWeightGrams > 0
+      ? product.avgPackWeightGrams / 1000 // Например: 300г -> 0.3кг
+      : (isWeighable ? 0.5 : 1); // Дефолт: 0.5кг для весовых, 1шт для штучных
+
   const handleAdd = (e?: React.MouseEvent) => {
-    e?.stopPropagation(); // Чтобы не открывалась модалка при клике на кнопку
-    const stepToAdd = product.step || 1;
+    e?.stopPropagation();
     cart.addItem({
       id: product.id,
       name: product.name,
       priceRub: product.priceRub,
       unit: product.unit,
       image: product.imageUrl || undefined,
-      step: product.step || undefined,
-      quantity: stepToAdd,
+      step: step,
+      quantity: step,
     });
   };
 
   const handleRemove = (e: React.MouseEvent) => {
       e.stopPropagation();
-      cart.removeItem(product.id);
+
+      // Логика уменьшения: если осталось <= 1 шага, удаляем, иначе отнимаем шаг
+      if (quantity - step <= 0.001) {
+          cart.removeItem(product.id);
+      } else {
+          const newQty = quantity - step;
+          cart.updateQuantity(product.id, Number(newQty.toFixed(3)));
+      }
   };
 
   return (
@@ -74,12 +85,10 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Контент */}
         <div className="flex flex-col flex-grow p-3 md:p-4 gap-2">
           <div className="flex-grow">
-              {/* Название */}
               <h3 className="font-semibold text-sm md:text-base leading-tight group-hover:text-primary transition-colors line-clamp-2">
                 {product.name}
               </h3>
 
-              {/* Описание: возвращено, ограничено 2 строками (line-clamp-2) */}
               {product.description ? (
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-snug">
                   {product.description}
@@ -94,7 +103,10 @@ export function ProductCard({ product }: ProductCardProps) {
                 {product.priceRub} ₽
               </span>
               <span className="text-[10px] md:text-xs text-muted-foreground font-medium mt-0.5">
-                 {isWeighable ? "за 1 кг" : "за 1 шт."}
+                 {/* Показываем реальный шаг (например, "за 0.3 кг") вместо просто "за 1 кг" */}
+                 {isWeighable
+                    ? `за ${step === 1 ? '1' : step} кг`
+                    : "за 1 шт."}
               </span>
             </div>
 
@@ -120,7 +132,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 <div className="flex flex-col items-center min-w-[1.5rem] md:min-w-[2rem]">
                     <span className="text-center font-bold text-xs md:text-sm tabular-nums leading-none">
                     {isWeighable
-                        ? (quantity).toFixed(1) // Показываем 1 знак для компактности в карточке
+                        ? (quantity).toFixed(1)
                         : quantity}
                     </span>
                 </div>
