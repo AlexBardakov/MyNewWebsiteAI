@@ -231,14 +231,19 @@ export default function CheckoutPage() {
                                 onChange={(e) => setAddressDetails({...addressDetails, intercom: e.target.value})}
                             />
                         </div>
-                    </div>
 
+                    </div>
+                    <p className="text-xs text-muted-foreground text-left">
+                      * Обратите внимание, что в случае загруженности на производстве или сложной дорожной ситуации, мы не всегда можем доставить заказ точно ко времени. В таком случае мы обязательно сообщим Вам об этом. Спасибо Вам за понимание.
+                    </p>
                  </div>
               ) : (
                 <div className="p-4 bg-secondary/30 rounded-xl text-sm text-muted-foreground animate-in fade-in slide-in-from-top-2">
                   📍 Забрать заказ можно по адресу: <br/>
-                  <span className="font-medium text-foreground">г. Томск, пр. Комсомольский, 48</span><br/>
-                  <span className="text-xs">Ежедневно с 10:00 до 20:00</span>
+                  <span className="font-medium text-foreground">г. Томск, ул. Мокрушина 9с15</span><br/>
+                  <span className="text-xs">Вт-Пт - с 10:00 до 21:00</span>
+                  <span className="text-xs">Сб - с 12:00 до 20:00</span>
+                  <span className="text-xs">Вс-Пн - выходной</span>
                 </div>
               )}
             </div>
@@ -247,7 +252,7 @@ export default function CheckoutPage() {
               <Label htmlFor="comment">Комментарий к заказу</Label>
               <Textarea
                 id="comment"
-                placeholder="Пожелания по упаковке, время доставки..."
+                placeholder="Можете указать пожелания по заказу или просто пожелать нам что-нибудь :)"
                 value={formData.comment}
                 onChange={(e) => setFormData({...formData, comment: e.target.value})}
               />
@@ -294,8 +299,9 @@ export default function CheckoutPage() {
                 <span>{Math.round(total).toLocaleString('ru-RU')} ₽</span>
               </div>
               {formData.deliveryType === 'delivery' && (
-                  <p className="text-xs text-muted-foreground text-right">
-                      * Стоимость доставки рассчитывается менеджером
+                  <p className="text-xs text-muted-foreground text-left">
+                      * Конечная сумма рассчитывается по наличию и реальному объему кусочков сыра. <br/>Мы свяжемся с Вами для уточнения деталей. <br/><br/>
+                      ** Со стоимостью доставки и зонами, Вы можете ознакомиться на карте.
                   </p>
               )}
             </div>

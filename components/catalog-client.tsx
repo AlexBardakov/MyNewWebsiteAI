@@ -10,17 +10,21 @@ interface Category {
   name: string;
 }
 
-interface Product {
+export interface Product {
   id: string;
   name: string;
+  description: string | null;
   priceRub: number;
   imageUrl: string | null;
   unit: string;
-  description: string | null;
   avgPackWeightGrams: number | null;
   remainder: number;
   categoryId: string;
-  step?: number; // ИСПРАВЛЕНИЕ: Добавили поле step
+  category?: { id: string; name: string };
+  // Добавляем массив вариантов
+  variants: { id: string; name: string }[];
+  displayOrder?: number;
+  isActive?: boolean;
 }
 
 interface CatalogClientProps {

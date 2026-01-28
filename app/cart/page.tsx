@@ -6,20 +6,19 @@ import { useCart } from '@/store/cart';
 import { Button } from '@/components/ui/button';
 import { Minus, Plus, Trash2, ArrowRight } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
+// Добавляем Badge для красивого вывода варианта
+import { Badge } from '@/components/ui/badge';
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, total } = useCart();
 
   // Функция для красивого отображения количества
-  // 1 шт, 5 шт
-  // 0.250 кг, 1.500 кг
   const formatQuantity = (val: number, unit: string) => {
     if (unit === 'pcs') return `${val} шт`;
-    // Для кг оставляем 3 знака (0.250), но убираем лишние нули в конце если число целое
     return `${Number(val.toFixed(3))} кг`;
   };
 
-  // Округляем кол-во при изменении, чтобы не было 0.3000000004
+  // Округляем кол-во при изменении
   const handleUpdateQuantity = (id: string, newQty: number) => {
     updateQuantity(id, Number(newQty.toFixed(3)));
   };
@@ -65,11 +64,22 @@ export default function CartPage() {
 
               {/* Инфо */}
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-lg leading-tight truncate">{item.name}</h3>
-                <p className="text-muted-foreground text-sm">
+                {/* ИЗМЕНЕНИЕ: Убрал truncate, чтобы вариант не обрезался.
+                   Добавил вывод варианта, если он есть.
+                */}
+                <h3 className="font-medium text-lg leading-tight">
+                  {item.name}
+                  {item.variant && (
+                     <Badge variant="secondary" className="ml-2 text-xs font-normal text-muted-foreground px-1.5 py-0 h-5 align-middle">
+                       {item.variant}
+                     </Badge>
+                  )}
+                </h3>
+
+                <p className="text-muted-foreground text-sm mt-1">
                   {item.unit === 'kg' ? 'Весовой товар' : 'Штучный товар'}
                 </p>
-                {/* Мобильная цена (УБРАЛ ЛИШНИЙ ЗНАК РУБЛЯ) */}
+                {/* Мобильная цена */}
                 <div className="mt-1 font-bold text-primary md:hidden">
                     {formatPrice(item.priceRub * item.quantity)}
                 </div>
@@ -96,7 +106,7 @@ export default function CartPage() {
                 </Button>
               </div>
 
-              {/* Десктоп цена (УБРАЛ ЛИШНИЙ ЗНАК РУБЛЯ) */}
+              {/* Десктоп цена */}
               <div className="hidden md:block text-right min-w-[120px]">
                 <div className="font-bold text-lg">{formatPrice(item.priceRub * item.quantity)}</div>
                 <div className="text-xs text-muted-foreground">
@@ -123,12 +133,10 @@ export default function CartPage() {
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-muted-foreground">
                 <span>Товары ({items.length})</span>
-                {/* УБРАЛ ЛИШНИЙ ЗНАК РУБЛЯ */}
                 <span>{formatPrice(total)}</span>
               </div>
               <div className="flex justify-between font-bold text-xl pt-4 border-t border-dashed border-secondary">
                 <span>Итого</span>
-                {/* УБРАЛ ЛИШНИЙ ЗНАК РУБЛЯ */}
                 <span>{formatPrice(total)}</span>
               </div>
             </div>
@@ -140,7 +148,7 @@ export default function CartPage() {
             </Button>
 
             <p className="text-xs text-center text-muted-foreground mt-4">
-              Оплата производится при получении.
+              Оплата производится после сбора и корректировки суммы заказа.
             </p>
           </div>
         </div>

@@ -1,12 +1,11 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-// ИЗМЕНЕНИЕ: Обычный импорт вместо dynamic
 import YandexConstructorMap from "@/components/YandexConstructorMap";
 
 export const metadata: Metadata = {
   title: "О магазине и контакты | Four Kings",
-  description: "Контакты, адреса и график работы сырной лавки Four Kings.",
+  description: "Контакты, адреса и график работы производственной точки Four Kings.",
 };
 
 export default function AboutPage() {
@@ -16,11 +15,9 @@ export default function AboutPage() {
     name: 'Four Kings',
     url: 'https://fourkings.ru',
     contactPoint: [
-      { '@type': 'ContactPoint', telephone: '+7-995-965-50-51', contactType: 'customer service', areaServed: 'RU', availableLanguage: ['ru'] },
       { '@type': 'ContactPoint', telephone: '+7-960-970-70-18', contactType: 'production', areaServed: 'RU', availableLanguage: ['ru'] },
     ],
     address: [
-      { '@type': 'PostalAddress', addressCountry: 'RU', addressLocality: 'Томск', streetAddress: 'пр. Комсомольский, 48' },
       { '@type': 'PostalAddress', addressCountry: 'RU', addressLocality: 'Томск', streetAddress: 'ул. Мокрушина, 9с15' },
     ],
   };
@@ -48,12 +45,12 @@ export default function AboutPage() {
           </h2>
           <ul className="space-y-4 text-lg">
             <li className="flex flex-col">
-              <span className="text-muted-foreground text-sm">Магазин (Комсомольский 48)</span>
-              <a className="hover:text-primary transition-colors font-medium" href="tel:+79959655051">+7 995 965-50-51</a>
-            </li>
-            <li className="flex flex-col">
               <span className="text-muted-foreground text-sm">Производство (Мокрушина 9с15)</span>
               <a className="hover:text-primary transition-colors font-medium" href="tel:+79609707018">+7 960 970-70-18</a>
+            </li>
+            <li className="flex flex-col">
+              <span className="text-muted-foreground text-sm">Дополнительный номер для связи:</span>
+              <a className="hover:text-primary transition-colors font-medium" href="tel:+79962055051">+7 996 205-50-51</a>
             </li>
             <li className="flex flex-col">
               <span className="text-muted-foreground text-sm">Email</span>
@@ -63,7 +60,7 @@ export default function AboutPage() {
 
             <div className="pt-4 border-t border-border">
               <p className="text-sm text-muted-foreground">
-                Вопрос по заказу? <Link className="text-primary underline-offset-4 hover:underline" href="/order-track">Проверить статус заказа</Link>
+                Вопрос по заказу? Скорее свяжитесь с нами!
               </p>
             </div>
         </div>
@@ -72,12 +69,10 @@ export default function AboutPage() {
         <div className="rounded-3xl border border-secondary bg-card p-8 shadow-sm space-y-6">
           <h2 className="text-2xl font-semibold">График работы</h2>
           <div className="space-y-6">
+
             <div>
-              <div className="font-medium text-lg mb-1">Магазин</div>
-              <p className="text-muted-foreground">Ежедневно <span className="text-foreground font-medium">10:00 – 20:00</span></p>
-            </div>
-            <div>
-              <div className="font-medium text-lg mb-1">Производство</div>
+              <div className="font-medium text-lg mb-1">Производство (ул. Мокрушина 9с15).<br/>
+               Ориентир - бизнес-центр "Вертикаль"</div>
               <div className="space-y-1 text-muted-foreground">
                 <p>Вт–Пт: <span className="text-foreground font-medium">10:00 – 21:00</span></p>
                 <p>Сб: <span className="text-foreground font-medium">12:00 – 20:00</span></p>

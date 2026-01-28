@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image"; // <--- ДОБАВИЛ ИМПОРТ
 import { usePathname } from "next/navigation";
 import { ShoppingCart, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,10 +30,18 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
 
-        {/* Логотип */}
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity">
-           🧀 <span className="hidden sm:inline">CheeseShop</span>
-           <span className="sm:hidden">CS</span>
+        {/* Логотип (Десктоп + Мобайл шапка) */}
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+           <Image
+              src="/logo.png"
+              alt="Four Kings Logo"
+              width={40}
+              height={40}
+              className="object-contain"
+           />
+           <span className="font-bold text-xl tracking-tight text-foreground">
+             Four Kings
+           </span>
         </Link>
 
         {/* Десктопное меню */}
@@ -68,15 +77,22 @@ export function Header() {
           {/* Мобильное меню */}
           <Sheet>
             <SheetTrigger asChild>
-              {/* ДОБАВЛЕНО: suppressHydrationWarning для подавления ошибки ID */}
               <Button variant="ghost" size="icon" className="md:hidden" suppressHydrationWarning>
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
               <div className="flex flex-col gap-6 mt-8">
-                <Link href="/" className="font-bold text-xl mb-4">
-                  🧀 CheeseShop
+                {/* Логотип в мобильном меню тоже заменил на картинку для красоты */}
+                <Link href="/" className="flex items-center gap-2 font-bold text-xl mb-4">
+                  <Image
+                      src="/logo.png"
+                      alt="Four Kings Logo"
+                      width={32}
+                      height={32}
+                      className="object-contain"
+                   />
+                   <span>Four Kings</span>
                 </Link>
                 <nav className="flex flex-col gap-4">
                   {routes.map((route) => (
