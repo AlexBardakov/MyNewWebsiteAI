@@ -241,9 +241,9 @@ export default function CheckoutPage() {
                 <div className="p-4 bg-secondary/30 rounded-xl text-sm text-muted-foreground animate-in fade-in slide-in-from-top-2">
                   📍 Забрать заказ можно по адресу: <br/>
                   <span className="font-medium text-foreground">г. Томск, ул. Мокрушина 9с15</span><br/>
-                  <span className="text-xs">Вт-Пт - с 10:00 до 21:00</span>
-                  <span className="text-xs">Сб - с 12:00 до 20:00</span>
-                  <span className="text-xs">Вс-Пн - выходной</span>
+                  <span className="text-xs">Вт-Пт - с 10:00 до 21:00<br/>
+                  Сб - с 12:00 до 20:00<br/>
+                  Вс-Пн - выходной</span>
                 </div>
               )}
             </div>
@@ -282,11 +282,9 @@ export default function CheckoutPage() {
               {items.map((item) => (
                 <div key={item.id} className="flex justify-between text-sm group">
                   <span className="group-hover:text-primary transition-colors">
-                    {/* ИСПРАВЛЕНО: Убрал деление на 1000 */}
                     {item.name} <span className="text-muted-foreground">x {item.unit === 'kg' ? item.quantity.toFixed(3) + ' кг' : item.quantity + ' шт'}</span>
                   </span>
                   <span className="font-medium whitespace-nowrap ml-2">
-                    {/* ИСПРАВЛЕНО: Убрал деление на 1000 */}
                     {Math.round(item.priceRub * item.quantity).toLocaleString('ru-RU')} ₽
                   </span>
                 </div>
