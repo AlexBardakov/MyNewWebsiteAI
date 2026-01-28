@@ -1,28 +1,42 @@
+import { ProductDialog } from "./product-dialog";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ProductDialog } from "./product-dialog";
-import { deleteProduct } from "./actions"; // Импортируем удаление
-import Image from "next/image";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { deleteProduct } from "./actions"; // Убедись, что импорт правильный (возможно нужен отдельный компонент для кнопки удаления)
 import { Trash2 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminProductsPage() {
+  // ВАЖНО: Добавили include: { variants: true }
   const products = await db.product.findMany({
-    include: { category: true },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
+    include: {
+      category: true,
+      variants: true, // <--- ВОТ ЭТОЙ СТРОЧКИ НЕ ХВАТАЛО
+    },
   });
 
-  const categories = await db.category.findMany({ orderBy: { name: 'asc' } });
+  const categories = await db.category.findMany({
+    orderBy: { name: "asc" },
+  });
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Товары</h1>
-        {/* Диалог создания (без пропса product) */}
         <ProductDialog categories={categories} />
       </div>
 
-      <div className="rounded-md border bg-white">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -31,32 +45,58 @@ export default async function AdminProductsPage() {
               <TableHead>Категория</TableHead>
               <TableHead>Цена</TableHead>
               <TableHead>Остаток</TableHead>
-              <TableHead>Активен</TableHead>
+              <TableHead>Статус</TableHead>
               <TableHead className="text-right">Действия</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((p) => (
-              <TableRow key={p.id}>
+            {products.map((product) => (
+              <TableRow key={product.id}>
                 <TableCell>
-                  {p.imageUrl && (
-                    <Image src={p.imageUrl} alt={p.name} width={40} height={40} className="rounded object-cover" />
+                  {product.imageUrl ? (
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="h-10 w-10 rounded object-cover"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded bg-secondary/20" />
                   )}
                 </TableCell>
-                <TableCell className="font-medium">{p.name}</TableCell>
-                <TableCell>{p.category.name}</TableCell>
-                <TableCell>{p.priceRub} ₽ / {p.unit}</TableCell>
-                <TableCell>{p.remainder}</TableCell>
-                <TableCell>{p.isActive ? "✅" : "❌"}</TableCell>
-                <TableCell className="text-right flex justify-end gap-2">
-                  {/* Кнопка Редактировать (передаем товар) */}
-                  <ProductDialog categories={categories} product={p} />
+                <TableCell className="font-medium">
+                  {product.name}
+                  {/* Можно показать бейджик, если есть варианты */}
+                  {product.variants.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {product.variants.map((v) => (
+                        <span key={v.id} className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">
+                          {v.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>{product.category.name}</TableCell>
+                <TableCell>{product.priceRub} ₽</TableCell>
+                <TableCell>
+                  {product.remainder} {product.unit}
+                </TableCell>
+                <TableCell>
+                  {product.isActive ? (
+                    <Badge variant="default" className="bg-green-600 hover:bg-green-700">Активен</Badge>
+                  ) : (
+                    <Badge variant="secondary">Скрыт</Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-right space-x-2">
+                  {/* Передаем товар (вместе с загруженными вариантами) в диалог */}
+                  <ProductDialog categories={categories} product={product} />
 
-                  {/* Кнопка Удалить */}
-                  <form action={deleteProduct.bind(null, p.id)}>
-                    <Button variant="ghost" size="icon" className="text-red-500">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  {/* Кнопка удаления (лучше вынести в отдельный клиентский компонент, но для простоты можно так) */}
+                  <form action={deleteProduct.bind(null, product.id)} className="inline-block">
+                     <Button variant="ghost" size="icon" className="hover:text-red-600">
+                        <Trash2 className="h-4 w-4" />
+                     </Button>
                   </form>
                 </TableCell>
               </TableRow>

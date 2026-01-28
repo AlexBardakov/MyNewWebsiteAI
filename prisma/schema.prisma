@@ -124,8 +124,6 @@ model Order {
   totalRub    Int
   deliveryRub Int @default(0)
 
-  variant      String?
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -146,6 +144,8 @@ model OrderItem {
   priceRub     Int
   quantity     Int
   lineTotalRub Int
+
+  variant      String?
 
   createdAt DateTime @default(now())
 
