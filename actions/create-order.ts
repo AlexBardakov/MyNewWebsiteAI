@@ -1,62 +1,67 @@
 "use server";
 
-import { db } from "@/lib/db"; // Ваш путь к клиенту Prisma
+import { db } from "@/lib/db";
 import { sendTelegramNotification } from "@/lib/telegram";
 import { z } from "zod";
 
-// Пример схемы валидации (замените на вашу)
+// Схема валидации данных формы
 const orderSchema = z.object({
   name: z.string().min(2),
   phone: z.string().min(10),
   deliveryMethod: z.enum(["pickup", "delivery"]),
   address: z.string().optional(),
   comment: z.string().optional(),
-  // ... остальные поля
+  totalAmount: z.number().optional(),
 });
 
 export async function createOrder(formData: z.infer<typeof orderSchema>, cartItems: any[]) {
   try {
-    // 1. Создаем заказ в базе данных
-    // ВАЖНО: Используйте include: { items: true }, чтобы сразу получить созданные товары
+    // Рассчитываем итоговую сумму (или берем из формы)
+    const calculatedTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const finalTotal = formData.totalAmount || calculatedTotal;
+
+    // 1. Создаем заказ в БД
     const newOrder = await db.order.create({
       data: {
         customerName: formData.name,
-        phone: formData.phone,
+        customerPhone: formData.phone,
         deliveryMethod: formData.deliveryMethod,
-        address: formData.address,
-        comment: formData.comment,
-        totalAmount: 1000, // Тут должна быть ваша логика подсчета суммы
+        customerAddress: formData.address,
+        customerComment: formData.comment,
+        totalRub: finalTotal,
+        deliveryRub: 0,
         
         // Создаем связанные товары
         items: {
           create: cartItems.map((item) => ({
             productId: item.id,
-            name: item.name,      // Сохраняем имя на момент покупки
-            price: item.price,    // Сохраняем цену на момент покупки
+            productName: item.name,
+            priceRub: item.price,
             quantity: item.quantity,
+            unit: item.unit || 'шт',         // Сохраняем unit в БД
+            lineTotalRub: item.price * item.quantity,
           })),
         },
       },
       include: {
-        items: true, // ОБЯЗАТЕЛЬНО: возвращаем товары, чтобы отправить их в телеграм
+        items: true,
       },
     });
 
     // 2. Отправляем уведомление в Telegram
-    // Делаем это без await, чтобы клиент не ждал отправки сообщения
-    // (или с await, если хотите гарантировать отправку перед редиректом)
     await sendTelegramNotification({
       id: newOrder.id,
       customerName: newOrder.customerName,
-      phone: newOrder.phone,
+      phone: newOrder.customerPhone,
       deliveryMethod: newOrder.deliveryMethod,
-      address: newOrder.address,
-      comment: newOrder.comment,
-      totalAmount: newOrder.totalAmount, // Убедитесь, что это число (Number)
+      address: newOrder.customerAddress || '',
+      comment: newOrder.customerComment || '',
+      totalAmount: newOrder.totalRub,
       items: newOrder.items.map((item) => ({
-        name: item.name,
+        name: item.productName,
         quantity: item.quantity,
-        price: item.price,
+        price: item.priceRub,
+        unit: item.unit,  // <--- ДОБАВИЛИ ЭТУ СТРОКУ (исправление ошибки)
       })),
     });
 

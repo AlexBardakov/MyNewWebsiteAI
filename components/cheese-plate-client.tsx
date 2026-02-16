@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { useCart } from '@/store/cart'; // Убедись, что путь к стору верный
+import { useCart } from '@/store/cart';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -171,15 +171,12 @@ export default function CheesePlateClient({ initialProducts, initialCategories, 
   async function reloadSuggestions() {
   try {
     setSuggestionsLoading(true);
-    // ВМЕСТО fetch('/api/cheese-plates/suggestions')
     const res = await getSuggestionsAction(4);
 
     if (!res.ok || !res.suggestions) {
       throw new Error(res.error || 'Ошибка при загрузке');
     }
 
-    // normalizeCheesePlate можно оставить для подстраховки,
-    // но serialize на сервере уже вернул чистый JSON
     const sugg = res.suggestions.map(normalizeCheesePlate);
     setSuggestions(sugg);
   } catch (e) {
@@ -205,7 +202,6 @@ export default function CheesePlateClient({ initialProducts, initialCategories, 
       targetPriceRub: targetPriceRub.trim() ? Number(targetPriceRub) : undefined,
     };
 
-    // ВМЕСТО fetch('/api/cheese-plates/build', ...)
     const res = await buildPlateAction(params);
 
     if (!res.ok || !res.plate) {
@@ -244,7 +240,6 @@ export default function CheesePlateClient({ initialProducts, initialCategories, 
        targetPriceRub: targetPriceRub.trim() ? Number(targetPriceRub) : undefined,
      };
 
-     // ВМЕСТО fetch...
      const res = await buildPlateAction(params);
 
      if (res.ok && res.plate) {
@@ -281,21 +276,17 @@ export default function CheesePlateClient({ initialProducts, initialCategories, 
 
     plate.products.forEach((it) => {
       const full = productMap.get(it.id);
-      // Проверяем наличие (вдруг кто-то уже купил, пока мы выбирали)
       if (!full || full.remainder <= 0) return;
 
       let qty = 0;
       let step = 1;
 
       if (full.unit === 'kg') {
-        // Берем средний вес упаковки или 200г по дефолту
         const grams = full.avgPackWeightGrams && full.avgPackWeightGrams > 0
           ? full.avgPackWeightGrams
           : 200;
-
-        // ВАЖНО: Переводим граммы в килограммы для корзины (200г -> 0.2кг)
         qty = grams / 1000;
-        step = qty; // Шаг в корзине делаем равным одному кусочку
+        step = qty;
       } else {
         qty = 1;
         step = 1;
@@ -303,6 +294,7 @@ export default function CheesePlateClient({ initialProducts, initialCategories, 
 
       addItem({
         id: full.id,
+        productId: full.id, // <--- ИСПРАВЛЕНИЕ ЗДЕСЬ
         name: full.name,
         priceRub: full.priceRub,
         quantity: qty,

@@ -18,15 +18,16 @@ export async function createRecipeCategory(formData: FormData) {
 
     revalidatePath("/admin/recipes");
     revalidatePath("/admin/recipes/categories");
-    return { success: true };
+    // Мы убрали return, чтобы не было конфликта типов
   } catch (e) {
-    return { error: "Ошибка создания категории" };
+    console.error("Ошибка создания категории:", e);
+    // И здесь тоже убрали return
   }
 }
 
 export async function deleteRecipeCategory(id: string) {
   try {
-    // 1. Сначала отвязываем рецепты (делаем их "без категории")
+    // 1. Сначала отвязываем рецепты
     await db.recipe.updateMany({
       where: { categoryId: id },
       data: { categoryId: null },
@@ -40,6 +41,6 @@ export async function deleteRecipeCategory(id: string) {
     revalidatePath("/admin/recipes");
     revalidatePath("/admin/recipes/categories");
   } catch (e) {
-    return { error: "Не удалось удалить категорию" };
+    console.error("Не удалось удалить категорию:", e);
   }
 }

@@ -1,21 +1,27 @@
 "use client";
 
-import { useActionState } from "react";
-import { loginAction } from "./actions"; // Создадим этот файл следующим шагом
+import { useActionState, useEffect } from "react";
+import { loginAction } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 
+// Начальное состояние
+const initialState = {
+  error: "",
+};
+
 export default function AdminLoginPage() {
-  // Используем useActionState для обработки формы (Next.js 15/16 style)
-  const [state, action, isPending] = useActionState(async (prev: any, formData: FormData) => {
-    const result = await loginAction(prev, formData);
-    if (result?.error) {
-      toast.error(result.error);
+  // Передаем action напрямую, без оберток
+  const [state, action, isPending] = useActionState(loginAction, initialState);
+
+  // Следим за ошибками через эффект
+  useEffect(() => {
+    if (state?.error) {
+      toast.error(state.error);
     }
-    return result;
-  }, null);
+  }, [state]);
 
   return (
     <div className="flex h-screen items-center justify-center bg-gray-50">

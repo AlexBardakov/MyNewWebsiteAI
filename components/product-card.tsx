@@ -5,29 +5,23 @@ import Image from 'next/image';
 import { Product } from '@/components/catalog-client';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/store/cart';
-import { Minus, Plus, ShoppingCart, List } from 'lucide-react'; // Добавил иконку для выбора
+import { Minus, Plus, ShoppingCart, List } from 'lucide-react';
 import { ProductDetailsModal } from '@/components/product-details-modal';
 import { cn } from '@/lib/utils';
-// Badge не использовался в твоем коде явно, но оставим импорт, если нужен
 import { Badge } from '@/components/ui/badge';
 
-interface ProductWithVariants extends Product {
-  variants?: { id: string; name: string }[];
-}
-
 interface Props {
-  product: ProductWithVariants;
+  product: Product; // Используем базовый интерфейс, в нем уже есть variants
 }
 
 export function ProductCard({ product }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { items, addItem, removeItem, updateQuantity } = useCart();
 
-  // Проверяем, есть ли варианты
+  // Проверяем, есть ли варианты (безопасная проверка, даже если придет пустой массив или undefined)
   const hasVariants = product.variants && product.variants.length > 0;
 
   // Логика поиска в корзине актуальна только для простых товаров без вариантов.
-  // Для вариативных товаров мы не показываем +/- на карточке, так как неизвестно, какой вариант менять.
   const cartItem = !hasVariants ? items.find((i) => i.id === product.id) : null;
   const isInCart = !!cartItem;
 
@@ -46,7 +40,6 @@ export function ProductCard({ product }: Props) {
     e.stopPropagation();
 
     if (hasVariants) {
-      // Если есть варианты, просто открываем модалку
       setIsModalOpen(true);
       return;
     }
@@ -54,6 +47,7 @@ export function ProductCard({ product }: Props) {
     // Иначе добавляем стандартный товар
     addItem({
       id: product.id,
+      productId: product.id, // <--- ДОБАВЛЕНО (Обязательное поле для корзины)
       name: product.name,
       priceRub: product.priceRub,
       quantity: step,
@@ -133,7 +127,6 @@ export function ProductCard({ product }: Props) {
               </span>
             </div>
 
-            {/* Шаг показываем только для весовых и если товар в наличии */}
             {product.unit === 'kg' && !isOutOfStock && (
               <div className="text-xs text-muted-foreground font-medium">
                 Шаг ≈ {step.toLocaleString('ru-RU')} кг
@@ -148,7 +141,6 @@ export function ProductCard({ product }: Props) {
                  Нет в наличии
                </Button>
             ) : hasVariants ? (
-              // --- ВАРИАНТ 1: Если есть варианты, показываем кнопку "Выбрать" ---
               <Button
                 className="w-full gap-2 font-semibold bg-primary/90 hover:bg-primary"
                 size="sm"
@@ -161,7 +153,6 @@ export function ProductCard({ product }: Props) {
                 Выбрать
               </Button>
             ) : isInCart ? (
-              // --- ВАРИАНТ 2: Товар в корзине (простой), показываем +/- ---
               <div className="flex items-center justify-between bg-secondary/30 rounded-lg p-1">
                 <Button
                   variant="ghost"
@@ -184,7 +175,6 @@ export function ProductCard({ product }: Props) {
                 </Button>
               </div>
             ) : (
-              // --- ВАРИАНТ 3: Товар не в корзине (простой), кнопка "В корзину" ---
               <Button
                 className="w-full gap-2 font-semibold"
                 size="sm"

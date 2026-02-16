@@ -46,6 +46,7 @@ export function ProductActions({ product }: ProductActionsProps) {
   const handleAddToCart = () => {
     addItem({
       id: product.id,
+      productId: product.id, // <--- ДОБАВЛЕНА ЭТА СТРОКА
       name: product.name,
       priceRub: product.priceRub,
       quantity: quantity,
