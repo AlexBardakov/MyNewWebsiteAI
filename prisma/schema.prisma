@@ -216,3 +216,21 @@ model PageBlock {
 
   @@index([page, displayOrder])
 }
+
+model Certificate {
+  id               String   @id @default(cuid())
+  shortNumber      String   @unique
+  accessCode       String   @unique
+
+  recipientName    String   // Кому
+  amount           Int      // Сумма (число)
+  senderName       String   // От кого
+  message          String?  // Пожелания (может быть пустым)
+
+  senderContact    String   // Телефон отправителя
+  recipientContact String   // Кому отправить (телефон/email)
+  status           String   @default("PENDING")
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
