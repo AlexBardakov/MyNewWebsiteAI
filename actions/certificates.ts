@@ -59,17 +59,17 @@ export async function createCertificate(data: {
     })
 
     const telegramMessage = `
-🎁 *Новый заказ сертификата!*
-Номер: \`${shortNumber}\`
-Номинал: *${data.amount} руб.*
+🎁 <b>Новый заказ сертификата!</b>
+Номер: <code>${shortNumber}</code>
+Номинал: <b>${data.amount} руб.</b>
 
-👤 *От кого:* ${data.senderName}
+👤 <b>От кого:</b> ${data.senderName}
 📞 Контакт: ${data.senderContact}
 
-🎯 *Кому:* ${data.recipientName}
+🎯 <b>Кому:</b> ${data.recipientName}
 📱 Отправить на: ${data.recipientContact}
 
-🔗 [Проверить сертификат](https://твой-домен.ru/certificates/${accessCode})
+🔗 <a href="https://fourkings.ru/certificates/${accessCode}">Проверить сертификат</a>
     `;
 
     // Отправляем асинхронно, чтобы не тормозить ответ пользователю

@@ -88,3 +88,33 @@ ${deliveryInfo}
     console.error("❌ Ошибка сети при отправке в Telegram:", error);
   }
 }
+
+export async function sendTelegramMessage(text: string) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+
+  if (!token || !chatId) {
+    console.error("❌ Ошибка: Не заданы переменные окружения для Telegram.");
+    return;
+  }
+
+  try {
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: text,
+        parse_mode: "HTML", // Используем HTML для красивого форматирования
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Telegram API Error:", errorData);
+    }
+  } catch (error) {
+    console.error("❌ Ошибка сети при отправке сообщения в Telegram:", error);
+  }
+}
