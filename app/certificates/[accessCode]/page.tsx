@@ -98,7 +98,7 @@ export default async function CertificatePage({ params }: PageProps) {
         {/* Номер сертификата */}
         <div className="absolute flex items-center justify-end text-right"
           style={{
-            bottom: '8.5%', right: '26.5%', width: '40%',
+            bottom: '8.5%', right: '26%', width: '40%',
             color: '#333333', fontSize: '3.5cqw', fontWeight: '400',
             whiteSpace: 'nowrap'
           }}

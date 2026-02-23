@@ -24,6 +24,7 @@ export function Header() {
     { href: "/cheese-plate", label: "Сырная тарелка" },
     { href: "/recipes", label: "Рецепты" },
     { href: "/about", label: "О нас" },
+    { href: "/certificates", label: "Электронный сертификат" },
   ];
 
   return (

@@ -65,6 +65,12 @@ function AdminNav({ className }: { className?: string }) {
         </Button>
       </Link>
 
+      <Link href="/admin/certificates">
+        <Button variant="ghost" className="w-full justify-start gap-2">
+          Сертификаты
+        </Button>
+      </Link>
+
       <div className="mt-auto pt-4 border-t border-border">
         <form action={logout}>
           <Button variant="outline" className="w-full gap-2 text-red-500 hover:text-red-600 hover:bg-red-50">

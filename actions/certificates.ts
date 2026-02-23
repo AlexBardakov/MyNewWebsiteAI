@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { sendTelegramMessage } from '@/lib/telegram'
 
 // Генерация 6-значного номера (только цифры)
 function generateShortNumber() {
@@ -56,6 +57,23 @@ export async function createCertificate(data: {
         recipientContact: data.recipientContact,
       }
     })
+
+    const telegramMessage = `
+🎁 *Новый заказ сертификата!*
+Номер: \`${shortNumber}\`
+Номинал: *${data.amount} руб.*
+
+👤 *От кого:* ${data.senderName}
+📞 Контакт: ${data.senderContact}
+
+🎯 *Кому:* ${data.recipientName}
+📱 Отправить на: ${data.recipientContact}
+
+🔗 [Проверить сертификат](https://твой-домен.ru/certificates/${accessCode})
+    `;
+
+    // Отправляем асинхронно, чтобы не тормозить ответ пользователю
+    sendTelegramMessage(telegramMessage).catch(console.error);
 
     return { success: true, certificate }
   } catch (error) {
