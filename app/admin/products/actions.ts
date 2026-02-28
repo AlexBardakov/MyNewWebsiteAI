@@ -126,3 +126,17 @@ export async function deleteProduct(id: string) {
     console.error("Ошибка удаления:", e);
   }
 }
+
+export async function updateProductQuantity(id: string, remainder: number) {
+  try {
+    await db.product.update({
+      where: { id },
+      data: { remainder },
+    });
+    revalidatePath("/admin/products");
+    return { success: true };
+  } catch (e) {
+    console.error("Ошибка обновления остатка:", e);
+    return { error: "Не удалось обновить остаток" };
+  }
+}
