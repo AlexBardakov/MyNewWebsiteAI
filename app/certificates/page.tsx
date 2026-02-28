@@ -187,7 +187,7 @@ export default function BuyCertificatePage() {
             style={{ containerType: 'inline-size' }}
           >
             <Image
-              src="/certificate-bg.png"
+              src="/certificate-bg.webp"
               alt="Фон сертификата"
               width={1632}
               height={2450}

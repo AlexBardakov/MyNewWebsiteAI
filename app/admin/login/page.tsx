@@ -1,27 +1,34 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // <-- Добавляем импорт
 import { loginAction } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 
-// Начальное состояние
+// Расширяем начальное состояние
 const initialState = {
   error: "",
+  success: false,
 };
 
 export default function AdminLoginPage() {
-  // Передаем action напрямую, без оберток
+  const router = useRouter(); // <-- Инициализируем роутер
   const [state, action, isPending] = useActionState(loginAction, initialState);
 
-  // Следим за ошибками через эффект
+  // Следим за состоянием через эффект
   useEffect(() => {
     if (state?.error) {
       toast.error(state.error);
     }
-  }, [state]);
+
+    // Если логин прошел успешно — делаем редирект!
+    if (state?.success) {
+      router.push("/admin");
+    }
+  }, [state, router]);
 
   return (
     <div className="flex h-screen items-center justify-center bg-gray-50">

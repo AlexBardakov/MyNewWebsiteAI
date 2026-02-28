@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   },
   images: {
     // Разрешаем показывать картинки из локальной папки uploads (если вдруг не настроено)
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',

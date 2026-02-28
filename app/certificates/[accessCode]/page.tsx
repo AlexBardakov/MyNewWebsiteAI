@@ -43,7 +43,7 @@ export default async function CertificatePage({ params }: PageProps) {
         style={{ containerType: 'inline-size' }}
       >
         <Image
-          src="/certificate-bg.png"
+          src="/certificate-bg.webp"
           alt="Подарочный сертификат"
           width={1632}
           height={2450}
