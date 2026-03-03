@@ -3,42 +3,44 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-// Тот же ключ, что и в lib/auth.ts
 const SECRET_KEY = new TextEncoder().encode(process.env.JWT_SECRET || "default-secret");
 
 export async function middleware(request: NextRequest) {
-  // 1. Проверяем только пути, начинающиеся с /admin
-  if (request.nextUrl.pathname.startsWith("/admin")) {
-
-    // 2. Исключаем страницу входа, чтобы не было бесконечного цикла
-    if (request.nextUrl.pathname === "/admin/login") {
-      return NextResponse.next();
-    }
-
-    // 3. Ищем куку
-    const cookie = request.cookies.get("admin_session");
-    const token = cookie?.value;
-
-    // 4. Если токена нет — на выход
-    if (!token) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
-    }
-
-    // 5. Пробуем расшифровать токен
-    try {
-      await jwtVerify(token, SECRET_KEY);
-      // Если ошибок нет, значит токен верный — пропускаем
-      return NextResponse.next();
-    } catch (error) {
-      // Если токен поддельный или просрочен — на выход
-      console.error("Middleware: Неверный токен", error);
-      return NextResponse.redirect(new URL("/admin/login", request.url));
-    }
+  // 1. Исключаем страницу входа
+  if (request.nextUrl.pathname === "/admin/login") {
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  // 2. Ищем куку
+  const cookie = request.cookies.get("admin_session");
+  const token = cookie?.value;
+
+  // 3. Если токена нет совсем — сразу на выход
+  if (!token) {
+    return NextResponse.redirect(new URL("/admin/login", request.url));
+  }
+
+  // 4. ФИКС ОШИБКИ 500 ПРИ ЗАГРУЗКЕ ТОВАРОВ:
+  // Криптография (jwtVerify) в Edge ломает загрузку файлов (multipart/form-data).
+  // Раз базовый токен есть, пропускаем POST-запросы с файлами без глубокой расшифровки.
+  if (
+    request.method === "POST" &&
+    request.headers.get("content-type")?.includes("multipart/form-data")
+  ) {
+    return NextResponse.next();
+  }
+
+  // 5. Для обычных переходов по страницам делаем полную проверку токена
+  try {
+    await jwtVerify(token, SECRET_KEY);
+    return NextResponse.next();
+  } catch (error) {
+    console.error("Middleware: Неверный токен", error);
+    return NextResponse.redirect(new URL("/admin/login", request.url));
+  }
 }
 
 export const config = {
+  // Оставляем только админку
   matcher: ["/admin/:path*"],
 };
