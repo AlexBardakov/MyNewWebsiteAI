@@ -43,7 +43,7 @@ export default function Footer() {
             </nav>
           </div>
 
-          {/* 3. ПРАВАЯ КОЛОНКА: Контакты */}
+          {/* 3. ПРАВАЯ КОЛОНКА: Контакты и Соцсети */}
           <div className="flex flex-col gap-4">
             <h3 className="font-semibold text-gray-900">Контакты</h3>
             <div className="flex flex-col gap-4 text-sm text-muted-foreground">
@@ -71,6 +71,58 @@ export default function Footer() {
                     <Clock className="w-4 h-4 text-gray-900" />
                 </div>
                 <span>Вт-Пт с 10:00 до 21:00<br/>Сб с 12:00 до 20:00<br/>Вс-Пн - выходной</span>
+              </div>
+
+              {/* БЛОК СОЦСЕТЕЙ */}
+              <div className="mt-2 flex flex-col gap-3">
+                <span className="font-semibold text-gray-900">Наши соцсети:</span>
+                <div className="flex items-center gap-4">
+
+                  <a
+                    href="https://t.me/fourkings_cheese"
+                    title="Мессенджер"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="transition-transform hover:scale-110 opacity-90 hover:opacity-100 block"
+                  >
+                    <div
+                      className="w-8 h-8 bg-[#0088cc]"
+                      style={{
+                        WebkitMaskImage: 'url(/air.png)',
+                        WebkitMaskSize: 'contain',
+                        WebkitMaskRepeat: 'no-repeat',
+                        WebkitMaskPosition: 'center',
+                        maskImage: 'url(/air.png)',
+                        maskSize: 'contain',
+                        maskRepeat: 'no-repeat',
+                        maskPosition: 'center',
+                      }}
+                    />
+                  </a>
+
+                  <a
+                    href="https://www.instagram.com/cheesemaster_tomsk/"
+                    title="Фотокарточка"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="transition-transform hover:scale-110 opacity-90 hover:opacity-100 block"
+                  >
+                    <div
+                      className="w-8 h-8 bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888]"
+                      style={{
+                        WebkitMaskImage: 'url(/photo.png)',
+                        WebkitMaskSize: 'contain',
+                        WebkitMaskRepeat: 'no-repeat',
+                        WebkitMaskPosition: 'center',
+                        maskImage: 'url(/photo.png)',
+                        maskSize: 'contain',
+                        maskRepeat: 'no-repeat',
+                        maskPosition: 'center',
+                      }}
+                    />
+                  </a>
+
+                </div>
               </div>
 
             </div>

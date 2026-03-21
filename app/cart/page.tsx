@@ -1,16 +1,28 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/store/cart';
 import { Button } from '@/components/ui/button';
-import { Minus, Plus, Trash2, ArrowRight } from 'lucide-react';
+import { Minus, Plus, Trash2, ArrowRight, Clock, Moon } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
-// Добавляем Badge для красивого вывода варианта
 import { Badge } from '@/components/ui/badge';
+import { getStoreStatus } from '@/lib/time';
+// Импортируем Alert компоненты
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, total } = useCart();
+
+  // Состояния для работы со временем на клиенте
+  const [storeStatus, setStoreStatus] = useState<'open' | 'closing_soon' | 'closed'>('open');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setStoreStatus(getStoreStatus());
+    setMounted(true);
+  }, []);
 
   // Функция для красивого отображения количества
   const formatQuantity = (val: number, unit: string) => {
@@ -64,9 +76,6 @@ export default function CartPage() {
 
               {/* Инфо */}
               <div className="flex-1 min-w-0">
-                {/* ИЗМЕНЕНИЕ: Убрал truncate, чтобы вариант не обрезался.
-                   Добавил вывод варианта, если он есть.
-                */}
                 <h3 className="font-medium text-lg leading-tight">
                   {item.name}
                   {item.variant && (
@@ -125,7 +134,7 @@ export default function CartPage() {
           ))}
         </div>
 
-        {/* Итого */}
+        {/* Итого и Оповещения */}
         <div className="lg:col-span-4">
           <div className="bg-card border border-secondary rounded-3xl p-6 sticky top-24 shadow-sm">
             <h2 className="text-xl font-bold mb-4">Ваш заказ</h2>
@@ -135,11 +144,32 @@ export default function CartPage() {
                 <span>Товары ({items.length})</span>
                 <span>{formatPrice(total)}</span>
               </div>
-              <div className="flex justify-between font-bold text-xl pt-4 border-t border-dashed border-secondary">
+              <div className="flex justify-between font-bold text-xl pt-4 border-t border-dashed border-secondary mb-4">
                 <span>Итого</span>
                 <span>{formatPrice(total)}</span>
               </div>
             </div>
+
+            {/* БЛОК С ОПОВЕЩЕНИЯМИ ПЕРЕД КНОПКОЙ */}
+            {mounted && storeStatus === 'closed' && (
+              <Alert className="mb-4 bg-slate-100 border-slate-300">
+                <Moon className="h-4 w-4" />
+                <AlertTitle>Все сыровары спят (или работают в поте лица)</AlertTitle>
+                <AlertDescription className="text-sm">
+                  Ваш заказ будет бережно обработан в ближайший рабочий день. Вы можете указать удобный день доставки при оформлении заказа.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {mounted && storeStatus === 'closing_soon' && (
+              <Alert className="mb-4 bg-orange-50 border-orange-200 text-orange-800">
+                <Clock className="h-4 w-4 stroke-orange-600" />
+                <AlertTitle>Скоро закрываемся!</AlertTitle>
+                <AlertDescription className="text-sm">
+                  Принимаем последние заказы. Мы постараемся связаться с Вами и обработать заказ сегодня, но доставка может быть перенесена на завтра.
+                </AlertDescription>
+              </Alert>
+            )}
 
             <Button asChild size="lg" className="w-full font-bold text-lg h-12">
               <Link href="/checkout">

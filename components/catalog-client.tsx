@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ProductCard } from '@/components/product-card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { getStoreStatus } from '@/lib/time';
 
 interface Category {
   id: string;
@@ -34,6 +36,30 @@ interface CatalogClientProps {
 
 export default function CatalogClient({ initialProducts, categories }: CatalogClientProps) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  // Логика показа уведомления о времени работы
+  useEffect(() => {
+    const status = getStoreStatus();
+    if (status === 'open') return;
+
+    const todayDate = new Date().toLocaleDateString();
+    const lastShownDate = localStorage.getItem('status_warning_date');
+
+    if (lastShownDate !== todayDate) {
+      if (status === 'closed') {
+        toast('Сыровары Четырех королевств сейчас отдыхают 🌙', {
+          description: 'Вы можете собрать корзину, а мы бережно обработаем ваш заказ в рабочие часы.',
+          duration: 6000,
+        });
+      } else if (status === 'closing_soon') {
+        toast('Кажется, молоко убегает 🧀', {
+          description: 'Мы можем не успеть доставить заказ сегодня. Если мы не свяжемся с Вами в течение 10 минут, скорее всего доставка перенесется на завтра.',
+          duration: 10000,
+        });
+      }
+      localStorage.setItem('status_warning_date', todayDate);
+    }
+  }, []);
 
   // Функция для плавного скролла к категории
   const scrollToCategory = (categoryId: string) => {
