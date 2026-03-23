@@ -1,4 +1,10 @@
 // lib/telegram.ts
+import axios from 'axios';
+import { SocksProxyAgent } from 'socks-proxy-agent';
+
+// Инициализируем агента. Если переменной нет (например, на локальном ПК), пойдет напрямую.
+const proxyUrl = process.env.TELEGRAM_PROXY;
+const httpsAgent = proxyUrl ? new SocksProxyAgent(proxyUrl) : undefined;
 
 export interface TelegramOrderData {
   id: number | string;
@@ -12,7 +18,7 @@ export interface TelegramOrderData {
     name: string;
     quantity: number;
     price: number;
-    unit: string; // Добавили поле unit
+    unit: string;
   }[];
 }
 
@@ -29,24 +35,18 @@ export async function sendTelegramNotification(order: TelegramOrderData) {
   const itemsList = order.items
     .map((item, index) => {
       const lineTotal = Math.round(item.price * item.quantity);
-
-      // Логика форматирования количества
       let qtyString = "";
       if (item.unit === 'kg') {
-        // Если это кг, показываем 3 знака (например, 0.500 кг)
         qtyString = `${item.quantity.toFixed(3)} кг`;
       } else {
-        // Если штуки, просто число
         qtyString = `${item.quantity} шт.`;
       }
-
       return `${index + 1}. <b>${item.name}</b>\n   └ ${qtyString} x ${item.price} ₽ = ${lineTotal} ₽`;
     })
     .join("\n");
 
   // 2. Блок доставки
   const isDelivery = order.deliveryMethod === "delivery";
-
   const deliveryInfo = isDelivery
     ? `🚚 <b>Доставка по адресу:</b>\n${order.address || "Адрес не указан"}`
     : `🏃 <b>Самовывоз</b>`;
@@ -67,23 +67,14 @@ ${itemsList}
 ${deliveryInfo}
   `;
 
-  // 4. Отправляем
+  // 4. Отправляем через axios с агентом
   try {
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-        parse_mode: "HTML",
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ Telegram API Error:", errorData);
-    }
+    await axios.post(url, {
+      chat_id: chatId,
+      text: message,
+      parse_mode: "HTML",
+    }, { httpsAgent }); // <-- Заворачиваем трафик в туннель
   } catch (error) {
     console.error("❌ Ошибка сети при отправке в Telegram:", error);
   }
@@ -100,20 +91,11 @@ export async function sendTelegramMessage(text: string) {
 
   try {
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: text,
-        parse_mode: "HTML", // Используем HTML для красивого форматирования
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ Telegram API Error:", errorData);
-    }
+    await axios.post(url, {
+      chat_id: chatId,
+      text: text,
+      parse_mode: "HTML",
+    }, { httpsAgent }); // <-- Заворачиваем трафик в туннель
   } catch (error) {
     console.error("❌ Ошибка сети при отправке сообщения в Telegram:", error);
   }

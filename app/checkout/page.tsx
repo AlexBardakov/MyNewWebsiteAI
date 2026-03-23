@@ -84,15 +84,18 @@ export default function CheckoutPage() {
       if (res.success) {
         clearCart();
         router.push(`/checkout/success?orderId=${res.orderId || ''}`);
+        // ВАЖНО: Мы НЕ вызываем setLoading(false) здесь.
+        // Пусть лоадер крутится, пока страница не переключится.
       } else {
         toast.error(res.error || 'Ошибка при оформлении');
+        setLoading(false); // Снимаем загрузку только при ошибке от сервера
       }
     } catch (error) {
       console.error(error);
       toast.error('Произошла ошибка. Попробуйте позже.');
-    } finally {
-      setLoading(false);
+      setLoading(false); // Снимаем загрузку только при ошибке сети
     }
+    // Блок finally полностью удален, чтобы не сбивать редирект!
   };
 
   return (

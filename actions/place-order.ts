@@ -7,8 +7,8 @@ import { revalidatePath } from "next/cache";
 
 interface CartItem {
   id: string;
-  productId?: string; // Новый: реальный ID товара (если id в корзине составной)
-  variant?: string;   // Новый: название варианта
+  productId?: string;
+  variant?: string;
   name: string;
   priceRub: number;
   quantity: number;
@@ -67,31 +67,26 @@ export async function placeOrder(data: OrderData) {
       include: { items: true }
     });
 
-    // 2. Отправляем уведомление в Telegram
-    try {
-        await sendTelegramNotification({
-            id: order.id.slice(-6).toUpperCase(),
-            customerName: order.customerName,
-            phone: order.customerPhone,
-            deliveryMethod: order.deliveryMethod,
-            address: order.customerAddress,
-            comment: order.customerComment,
-            totalAmount: order.totalRub,
-            items: data.items.map(item => ({
-                // ВАЖНО: Добавляем вариант к названию для Telegram, чтобы было понятно, что собирать
-                name: item.variant ? `${item.name} (${item.variant})` : item.name,
-
-                // Передаем в телеграм исходное количество (0.3 кг), а не граммы (300)
-                quantity: item.quantity,
-                price: item.priceRub,
-                unit: item.unit
-            }))
-        });
-    } catch (tgError) {
-        console.error("Ошибка отправки в Telegram:", tgError);
-    }
+    // 2. Отправляем уведомление в Telegram В ФОНЕ (без await)
+    sendTelegramNotification({
+        id: order.id.slice(-6).toUpperCase(),
+        customerName: order.customerName,
+        phone: order.customerPhone,
+        deliveryMethod: order.deliveryMethod,
+        address: order.customerAddress,
+        comment: order.customerComment,
+        totalAmount: order.totalRub,
+        items: data.items.map(item => ({
+            name: item.variant ? `${item.name} (${item.variant})` : item.name,
+            quantity: item.quantity,
+            price: item.priceRub,
+            unit: item.unit
+        }))
+    }).catch(tgError => console.error("Ошибка фоновой отправки в Telegram:", tgError));
 
     revalidatePath('/admin/orders');
+
+    // Мгновенно возвращаем успех на фронтенд, не дожидаясь ответа от Telegram
     return { success: true, orderId: order.id };
 
   } catch (error) {
