@@ -13,13 +13,32 @@ import { Loader2, ArrowLeft, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { DeliveryMap } from '@/components/delivery-map';
+import { useEffect } from 'react';
+import { getUnavailableProductIds } from '@/actions/cart-validation';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, total, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
+  const [unavailableIds, setUnavailableIds] = useState<string[]>([]);
 
-  // Основная форма
+      useEffect(() => {
+        if (items.length === 0) return;
+        const checkAvailability = async () => {
+          const pIds = items.map(i => i.productId || i.id);
+          const badProductIds = await getUnavailableProductIds(pIds);
+          const badCartItemIds = items
+            .filter(i => badProductIds.includes(i.productId || i.id))
+            .map(i => i.id);
+          setUnavailableIds(badCartItemIds);
+        };
+        checkAvailability();
+      }, [items]);
+
+      // Считаем актуальный список и сумму ТОЛЬКО для живых товаров
+      const effectiveItems = items.filter(i => !unavailableIds.includes(i.id));
+      const effectiveTotal = effectiveItems.reduce((acc, i) => acc + i.priceRub * i.quantity, 0);
+      // Основная форма
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -73,8 +92,8 @@ export default function CheckoutPage() {
 
     try {
       const res = await placeOrder({
-        items,
-        total,
+        items: effectiveItems,
+        total: effectiveTotal,
         customer: {
             ...formData,
             address: finalAddress
@@ -282,7 +301,7 @@ export default function CheckoutPage() {
           <div className="bg-secondary/10 rounded-3xl p-6 sticky top-24">
             <h2 className="text-xl font-bold mb-4">Ваш заказ</h2>
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-              {items.map((item) => (
+              {effectiveItems.map((item) => (
                 <div key={item.id} className="flex justify-between text-sm group">
                   <span className="group-hover:text-primary transition-colors">
                     {item.name} <span className="text-muted-foreground">x {item.unit === 'kg' ? item.quantity.toFixed(3) + ' кг' : item.quantity + ' шт'}</span>
@@ -297,7 +316,7 @@ export default function CheckoutPage() {
             <div className="mt-6 pt-4 border-t border-dashed border-secondary space-y-2">
               <div className="flex justify-between font-bold text-xl">
                 <span>Итого</span>
-                <span>{Math.round(total).toLocaleString('ru-RU')} ₽</span>
+                <span>{Math.round(effectiveTotal).toLocaleString('ru-RU')} ₽</span>
               </div>
               {formData.deliveryType === 'delivery' && (
                   <p className="text-xs text-muted-foreground text-left">
