@@ -198,9 +198,9 @@ export default function CartPage() {
             {mounted && storeStatus === 'closed' && (
               <Alert className="mb-4 bg-slate-100 border-slate-300">
                 <Moon className="h-4 w-4" />
-                <AlertTitle>Сейчас мы закрыты</AlertTitle>
+                <AlertTitle>Сейчас нерабочее время</AlertTitle>
                 <AlertDescription className="text-sm">
-                  Вы можете сделать заказ, но он будет обработан в ближайшее рабочее время.
+                  Вы можете сделать заказ, но он будет обработан в ближайший рабочий день.
                 </AlertDescription>
               </Alert>
             )}
@@ -208,9 +208,9 @@ export default function CartPage() {
             {mounted && storeStatus === 'closing_soon' && (
               <Alert className="mb-4 bg-orange-50 border-orange-200 text-orange-800">
                 <Clock className="h-4 w-4 stroke-orange-600" />
-                <AlertTitle>Скоро закрываемся!</AlertTitle>
+                <AlertTitle>Близится конец рабочего дня!</AlertTitle>
                 <AlertDescription className="text-sm">
-                  Если у нас окажется высокая загруженность на производстве, доставка может быть перенесена на завтра.
+                  Если у нас окажется высокая загруженность на производстве, доставка может быть перенесена на завтра. Мы согласуем с Вами вопрос доставки при переносе на следующий день.
                 </AlertDescription>
               </Alert>
             )}
@@ -243,7 +243,7 @@ export default function CartPage() {
             <DialogTitle className="text-xl">Обратите внимание на время!</DialogTitle>
             <DialogDescription className="space-y-4 pt-3 text-base text-foreground">
               <p>
-                В данный момент сыроварня {storeStatus === 'closed' ? 'закрыта' : 'готовится к закрытию'}, поэтому мы не сможем доставить ваш заказ сейчас.
+                В данный момент на сыроварне {storeStatus === 'closed' ? 'нерабочее время' : 'готовятся к закрытию'}, скорее всего мы  не сможем доставить ваш заказ сейчас.
               </p>
               <div className="bg-secondary/30 p-4 rounded-xl text-sm leading-relaxed">
                 <strong>Наш график работы:</strong><br/>
