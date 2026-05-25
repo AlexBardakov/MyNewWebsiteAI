@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { sendTelegramMessage } from '@/lib/telegram'
+import { sendTelegramCertificateNotification } from '@/lib/telegram'
 
 // Генерация 6-значного номера (только цифры)
 function generateShortNumber() {
@@ -25,8 +25,26 @@ export async function createCertificate(data: {
   message: string
   senderContact: string
   recipientContact: string
+  /**
+   * Подтверждения согласий (152-ФЗ ст. 9 ч. 4 + Политика п. 8.3).
+   * Без обоих true сертификат не создаётся.
+   * Проверяется на сервере, дублирует клиентскую валидацию из app/certificates/page.tsx.
+   */
+  consent: {
+    self: boolean       // согласие отправителя на свои ПДн + акцепт оферты
+    recipient: boolean  // подтверждение согласия получателя на предоставление его данных
+  }
 }) {
   try {
+    // СЕРВЕРНАЯ ВАЛИДАЦИЯ СОГЛАСИЙ.
+    // Если клиентская проверка обойдена (DevTools, прямой вызов action) — сервер откажет.
+    if (!data.consent?.self || !data.consent?.recipient) {
+      return {
+        success: false,
+        error: 'Для оформления сертификата необходимо подтвердить оба согласия (на обработку Ваших данных и наличие согласия получателя).',
+      }
+    }
+
     let shortNumber = generateShortNumber()
 
     // Проверяем, нет ли уже такого 6-значного номера в базе
@@ -44,7 +62,10 @@ export async function createCertificate(data: {
 
     const accessCode = generateAccessCode()
 
-    // Создаем запись в БД с НОВЫМИ полями
+    // Создаём запись в БД.
+    // consentAcceptedAt фиксирует момент двойного подтверждения отправителя
+    // (152-ФЗ ст. 9 ч. 4 + Политика п. 8.3). Проставляется только после
+    // успешной серверной валидации в начале функции.
     const certificate = await prisma.certificate.create({
       data: {
         shortNumber,
@@ -55,25 +76,18 @@ export async function createCertificate(data: {
         message: data.message,
         senderContact: data.senderContact,
         recipientContact: data.recipientContact,
+        consentAcceptedAt: new Date(),
       }
     })
 
-    const telegramMessage = `
-🎁 <b>Новый заказ сертификата!</b>
-Номер: <code>${shortNumber}</code>
-Номинал: <b>${data.amount} руб.</b>
-
-👤 <b>От кого:</b> ${data.senderName}
-📞 Контакт: ${data.senderContact}
-
-🎯 <b>Кому:</b> ${data.recipientName}
-📱 Отправить на: ${data.recipientContact}
-
-🔗 <a href="https://fourkings.ru/certificates/${accessCode}">Проверить сертификат</a>
-    `;
-
-    // Отправляем асинхронно, чтобы не тормозить ответ пользователю
-    sendTelegramMessage(telegramMessage).catch(console.error);
+    // ОБЕЗЛИЧЕННОЕ уведомление в Telegram (без ПДн отправителя/получателя).
+    // Подробности и ссылки на конкретного отправителя/получателя — только в админке.
+    // См. lib/telegram.ts и docs/privacy-draft.md, раздел 7.3.
+    sendTelegramCertificateNotification({
+      shortNumber,
+      dbId: certificate.id,
+      amount: data.amount,
+    }).catch(console.error);
 
     return { success: true, certificate }
   } catch (error) {

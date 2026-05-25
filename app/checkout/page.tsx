@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, ArrowLeft, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -55,6 +56,11 @@ export default function CheckoutPage() {
     intercom: '',
   });
 
+  // Согласия (152-ФЗ ст. 9 ч. 4). Оба чекбокса обязательны.
+  // По умолчанию оба не отмечены — согласие должно быть активным действием.
+  const [consentPdn, setConsentPdn] = useState(false);
+  const [consentOferta, setConsentOferta] = useState(false);
+
   if (items.length === 0) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
@@ -69,6 +75,16 @@ export default function CheckoutPage() {
 
     if (formData.deliveryType === 'delivery' && !formData.address) {
         toast.error("Пожалуйста, укажите адрес доставки");
+        return;
+    }
+
+    // Клиентская валидация согласий. Серверная валидация дублируется в actions/place-order.ts.
+    if (!consentPdn) {
+        toast.error("Пожалуйста, подтвердите согласие на обработку персональных данных");
+        return;
+    }
+    if (!consentOferta) {
+        toast.error("Пожалуйста, подтвердите принятие условий Публичной оферты");
         return;
     }
 
@@ -97,7 +113,11 @@ export default function CheckoutPage() {
         customer: {
             ...formData,
             address: finalAddress
-        }
+        },
+        consent: {
+            pdn: consentPdn,
+            oferta: consentOferta,
+        },
       });
 
       if (res.success) {
@@ -280,7 +300,47 @@ export default function CheckoutPage() {
               />
             </div>
 
-            <Button type="submit" size="lg" className="w-full font-bold text-lg h-12" disabled={loading}>
+            {/* Согласия (152-ФЗ ст. 9 ч. 4). По умолчанию оба чекбокса не отмечены —
+                согласие должно быть активным действием субъекта ПДн. */}
+            <div className="space-y-3 pt-4 border-t border-secondary">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="consent-pdn"
+                  checked={consentPdn}
+                  onCheckedChange={(v) => setConsentPdn(v === true)}
+                  className="mt-1"
+                />
+                <Label htmlFor="consent-pdn" className="text-sm font-normal leading-relaxed cursor-pointer">
+                  Я даю согласие на обработку моих персональных данных в соответствии с{" "}
+                  <Link href="/privacy" target="_blank" rel="noopener" className="underline hover:text-primary">
+                    Политикой конфиденциальности
+                  </Link>
+                  .
+                </Label>
+              </div>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="consent-oferta"
+                  checked={consentOferta}
+                  onCheckedChange={(v) => setConsentOferta(v === true)}
+                  className="mt-1"
+                />
+                <Label htmlFor="consent-oferta" className="text-sm font-normal leading-relaxed cursor-pointer">
+                  Я ознакомлен(а) и принимаю условия{" "}
+                  <Link href="/oferta" target="_blank" rel="noopener" className="underline hover:text-primary">
+                    Публичной оферты
+                  </Link>
+                  .
+                </Label>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full font-bold text-lg h-12"
+              disabled={loading || !consentPdn || !consentOferta}
+            >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -290,9 +350,6 @@ export default function CheckoutPage() {
                 `Подтвердить заказ на ${Math.round(total).toLocaleString('ru-RU')} ₽`
               )}
             </Button>
-            <p className="text-xs text-center text-muted-foreground">
-              Нажимая кнопку, вы принимаете <Link href="/oferta" className="underline hover:text-foreground">Оферту</Link> и соглашаетесь на обработку <Link href="/privacy" className="underline hover:text-foreground">персональных данных</Link>.
-            </p>
           </form>
         </div>
 

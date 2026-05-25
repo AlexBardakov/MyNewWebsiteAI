@@ -80,7 +80,22 @@ export default async function AdminOrderDetailsPage({ params }: PageProps) {
                         <TableBody>
                             {order.items.map((item) => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="font-medium">{item.productName}</TableCell>
+                                    <TableCell className="font-medium">
+                                        <div className="flex flex-col gap-1">
+                                            <span>{item.productName}</span>
+                                            {/* Отображение варианта товара (если выбран).
+                                                Пример: "Качокавалло Цитрус (Лимон)" — где "Лимон" это вариант.
+                                                Раньше эта информация была только в Telegram-уведомлении. */}
+                                            {item.variant && (
+                                                <Badge
+                                                    variant="secondary"
+                                                    className="w-fit text-xs font-normal bg-amber-50 text-amber-800 border border-amber-200"
+                                                >
+                                                    Вариант: {item.variant}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </TableCell>
                                     <TableCell className="text-center whitespace-nowrap">
                                         {/* ЛОГИКА ОТОБРАЖЕНИЯ ЕДИНИЦ ИЗМЕРЕНИЯ */}
                                         {item.unit === 'kg'

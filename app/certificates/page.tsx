@@ -23,8 +23,24 @@ export default function BuyCertificatePage() {
   const [senderContact, setSenderContact] = useState('')
   const [recipientContact, setRecipientContact] = useState('')
 
+  // Согласия (152-ФЗ ст. 9 ч. 4 + п. 8.3 Политики).
+  // По умолчанию оба не отмечены — согласие должно быть активным действием.
+  const [consentSelf, setConsentSelf] = useState(false)
+  const [consentRecipient, setConsentRecipient] = useState(false)
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    // Клиентская валидация согласий. Серверная дублируется в actions/certificates.ts.
+    if (!consentSelf) {
+      alert('Пожалуйста, подтвердите согласие на обработку Ваших персональных данных.')
+      return
+    }
+    if (!consentRecipient) {
+      alert('Пожалуйста, подтвердите, что Вы получили согласие получателя на предоставление его контактных данных.')
+      return
+    }
+
     setLoading(true)
 
     const result = await createCertificate({
@@ -33,7 +49,11 @@ export default function BuyCertificatePage() {
       senderName,
       message,
       senderContact,
-      recipientContact
+      recipientContact,
+      consent: {
+        self: consentSelf,
+        recipient: consentRecipient,
+      },
     })
 
     if (result.success && result.certificate) {
@@ -168,9 +188,49 @@ export default function BuyCertificatePage() {
               />
             </div>
 
+            {/* Согласия (152-ФЗ ст. 9 ч. 4 + п. 8.3 Политики).
+                Минимум 2 чекбокса:
+                  1) согласие отправителя на обработку собственных ПДн и акцепт оферты;
+                  2) подтверждение, что отправитель получил согласие получателя
+                     на предоставление его контактных данных Оператору. */}
+            <div className="space-y-3 pt-4 border-t border-gray-100">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={consentSelf}
+                  onChange={(e) => setConsentSelf(e.target.checked)}
+                  className="mt-1 h-4 w-4 accent-amber-600 flex-shrink-0"
+                />
+                <span className="text-sm text-gray-700 leading-relaxed">
+                  Я даю согласие на обработку моих персональных данных в соответствии с{' '}
+                  <Link href="/privacy" target="_blank" rel="noopener" className="underline hover:text-amber-700">
+                    Политикой конфиденциальности
+                  </Link>
+                  {' '}и принимаю условия{' '}
+                  <Link href="/oferta" target="_blank" rel="noopener" className="underline hover:text-amber-700">
+                    Публичной оферты
+                  </Link>
+                  .
+                </span>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={consentRecipient}
+                  onChange={(e) => setConsentRecipient(e.target.checked)}
+                  className="mt-1 h-4 w-4 accent-amber-600 flex-shrink-0"
+                />
+                <span className="text-sm text-gray-700 leading-relaxed">
+                  Я подтверждаю, что мной получено согласие лица, чьи контактные
+                  данные я указал(а) в поле «Кому отправить», на их предоставление
+                  Оператору и использование для отправки сертификата.
+                </span>
+              </label>
+            </div>
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !consentSelf || !consentRecipient}
               className="w-full bg-amber-600 text-white font-bold py-4 rounded-lg hover:bg-amber-700 transition disabled:opacity-50 mt-4"
             >
               {loading ? 'Создаем...' : 'Создать сертификат'}

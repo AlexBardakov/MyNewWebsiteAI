@@ -7,13 +7,15 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    // Разрешаем показывать картинки из локальной папки uploads (если вдруг не настроено)
+    // Все пользовательские изображения хранятся локально в public/uploads (см. lib/upload.ts).
+    // Внешние домены не используются — это снижает юридический риск (152-ФЗ) и потенциальный SSRF.
     unoptimized: true,
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
+      // Собственный домен — оставлен на случай локальных preview-сборок или зеркал
+      { protocol: 'https', hostname: 'fourkings.ru' },
+      { protocol: 'https', hostname: 'www.fourkings.ru' },
+      // Локальная разработка
+      { protocol: 'http', hostname: 'localhost' },
     ],
   },
   async redirects() {

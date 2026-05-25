@@ -124,6 +124,13 @@ model Order {
   totalRub    Int
   deliveryRub Int @default(0)
 
+  // Фиксация факта согласия покупателя на обработку ПДн и акцепта оферты
+  // (152-ФЗ ст. 9 ч. 4 — оператор обязан уметь доказать факт согласия).
+  // Поле nullable, чтобы существующие заказы (до внедрения чекбоксов) не сломались.
+  // Для новых заказов сервер обязан проставить timestamp; при отсутствии согласия
+  // server action отклоняет запрос ещё до создания записи (см. actions/place-order.ts).
+  consentAcceptedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -230,6 +237,13 @@ model Certificate {
   senderContact    String   // Телефон отправителя
   recipientContact String   // Кому отправить (телефон/email)
   status           String   @default("PENDING")
+
+  // Фиксация факта двойного согласия отправителя:
+  //   1) на обработку собственных ПДн и акцепт оферты,
+  //   2) подтверждение, что отправитель имеет согласие получателя
+  //      на предоставление контактных данных Оператору.
+  // Подробнее: 152-ФЗ ст. 9 ч. 4, Политика конфиденциальности п. 8.3.
+  consentAcceptedAt DateTime?
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

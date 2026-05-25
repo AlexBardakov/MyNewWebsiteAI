@@ -80,7 +80,7 @@ export default function Footer() {
 
                   <a
                     href="https://t.me/fourkings_cheese"
-                    title="Мессенджер"
+                    title="Мы в Telegram"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="transition-transform hover:scale-110 opacity-90 hover:opacity-100 block"
@@ -100,27 +100,9 @@ export default function Footer() {
                     />
                   </a>
 
-                  <a
-                    href="https://www.instagram.com/cheesemaster_tomsk/"
-                    title="Фотокарточка"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="transition-transform hover:scale-110 opacity-90 hover:opacity-100 block"
-                  >
-                    <div
-                      className="w-8 h-8 bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888]"
-                      style={{
-                        WebkitMaskImage: 'url(/photo.png)',
-                        WebkitMaskSize: 'contain',
-                        WebkitMaskRepeat: 'no-repeat',
-                        WebkitMaskPosition: 'center',
-                        maskImage: 'url(/photo.png)',
-                        maskSize: 'contain',
-                        maskRepeat: 'no-repeat',
-                        maskPosition: 'center',
-                      }}
-                    />
-                  </a>
+                  {/* Ссылка на Instagram удалена в связи с признанием Meta Platforms
+                      экстремистской организацией на территории РФ (решение Тверского
+                      районного суда г. Москвы от 21.03.2022). */}
 
                 </div>
               </div>

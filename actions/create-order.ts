@@ -48,20 +48,19 @@ export async function createOrder(formData: z.infer<typeof orderSchema>, cartIte
       },
     });
 
-    // 2. Отправляем уведомление в Telegram
+    // 2. Отправляем ОБЕЗЛИЧЕННОЕ уведомление в Telegram (без ПДн).
+    //    См. lib/telegram.ts и docs/privacy-draft.md, раздел 7.3.
     await sendTelegramNotification({
-      id: newOrder.id,
-      customerName: newOrder.customerName,
-      phone: newOrder.customerPhone,
+      shortId: newOrder.id.slice(-6).toUpperCase(),
+      dbId: newOrder.id,
       deliveryMethod: newOrder.deliveryMethod,
-      address: newOrder.customerAddress || '',
-      comment: newOrder.customerComment || '',
       totalAmount: newOrder.totalRub,
       items: newOrder.items.map((item) => ({
         name: item.productName,
+        variant: item.variant,
         quantity: item.quantity,
         price: item.priceRub,
-        unit: item.unit,  // <--- ДОБАВИЛИ ЭТУ СТРОКУ (исправление ошибки)
+        unit: item.unit,
       })),
     });
 

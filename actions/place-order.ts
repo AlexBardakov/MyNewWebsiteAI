@@ -25,10 +25,28 @@ interface OrderData {
     address: string;
     comment: string;
   };
+  /**
+   * Подтверждения согласий (152-ФЗ). Без обоих true заказ не оформляется.
+   * Проверяется на сервере, дублирует клиентскую валидацию из app/checkout/page.tsx.
+   */
+  consent: {
+    pdn: boolean;
+    oferta: boolean;
+  };
 }
 
 export async function placeOrder(data: OrderData) {
   try {
+    // СЕРВЕРНАЯ ВАЛИДАЦИЯ СОГЛАСИЙ.
+    // Это критический rate-limit: если злоумышленник обойдёт клиентскую проверку
+    // через DevTools, сервер всё равно откажет.
+    if (!data.consent?.pdn || !data.consent?.oferta) {
+      return {
+        success: false,
+        error: 'Для оформления заказа необходимо подтвердить согласие на обработку персональных данных и принятие Публичной оферты.',
+      };
+    }
+
     // Подготовка товаров для БД (конвертация кг -> граммы)
     const dbItems = data.items.map((item) => {
       const isKg = item.unit === 'kg';
@@ -50,7 +68,10 @@ export async function placeOrder(data: OrderData) {
       };
     });
 
-    // 1. Сохраняем заказ в БД
+    // 1. Сохраняем заказ в БД.
+    //    consentAcceptedAt фиксирует момент подтверждения согласия (152-ФЗ ст. 9 ч. 4).
+    //    Запись делается только если серверная валидация согласий прошла (см. выше),
+    //    поэтому здесь безопасно проставлять текущий timestamp.
     const order = await prisma.order.create({
       data: {
         status: 'new',
@@ -60,6 +81,7 @@ export async function placeOrder(data: OrderData) {
         customerAddress: data.customer.address,
         customerComment: data.customer.comment,
         deliveryMethod: data.customer.deliveryType,
+        consentAcceptedAt: new Date(),
         items: {
           create: dbItems
         }
@@ -67,21 +89,21 @@ export async function placeOrder(data: OrderData) {
       include: { items: true }
     });
 
-    // 2. Отправляем уведомление в Telegram В ФОНЕ (без await)
+    // 2. Отправляем ОБЕЗЛИЧЕННОЕ уведомление в Telegram В ФОНЕ (без await).
+    //    Никаких ПДн (имя, телефон, адрес, комментарий) в Telegram не уходит.
+    //    Подробности см. lib/telegram.ts и docs/privacy-draft.md, раздел 7.3.
     sendTelegramNotification({
-        id: order.id.slice(-6).toUpperCase(),
-        customerName: order.customerName,
-        phone: order.customerPhone,
+        shortId: order.id.slice(-6).toUpperCase(),
+        dbId: order.id,
         deliveryMethod: order.deliveryMethod,
-        address: order.customerAddress,
-        comment: order.customerComment,
         totalAmount: order.totalRub,
         items: data.items.map(item => ({
-            name: item.variant ? `${item.name} (${item.variant})` : item.name,
+            name: item.name,
+            variant: item.variant ?? null,
             quantity: item.quantity,
             price: item.priceRub,
-            unit: item.unit
-        }))
+            unit: item.unit,
+        })),
     }).catch(tgError => console.error("Ошибка фоновой отправки в Telegram:", tgError));
 
     revalidatePath('/admin/orders');
