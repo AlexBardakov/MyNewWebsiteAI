@@ -3,7 +3,17 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const SECRET_KEY = new TextEncoder().encode(process.env.JWT_SECRET || "default-secret");
+// Жёсткое требование: JWT_SECRET ОБЯЗАН быть задан в env (см. lib/auth.ts).
+// Fallback `|| "default-secret"` удалён сознательно — лучше упасть при старте,
+// чем тихо работать с публично известным секретом.
+const rawSecret = process.env.JWT_SECRET;
+if (!rawSecret || rawSecret.length < 32) {
+  throw new Error(
+    "JWT_SECRET не задан или короче 32 символов. " +
+    "Задайте надёжный секрет в переменных окружения перед запуском приложения."
+  );
+}
+const SECRET_KEY = new TextEncoder().encode(rawSecret);
 
 export async function middleware(request: NextRequest) {
   // 1. Исключаем страницу входа

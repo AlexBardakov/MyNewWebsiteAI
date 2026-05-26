@@ -2,7 +2,18 @@
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 
-const SECRET_KEY = new TextEncoder().encode(process.env.JWT_SECRET || "default-secret");
+// Жёсткое требование: JWT_SECRET ОБЯЗАН быть задан в env.
+// Раньше здесь был fallback `|| "default-secret"`, при котором отсутствие переменной
+// приводило к тихой компрометации админки (любой мог подписать токен «default-secret»).
+// Теперь — fail fast при старте процесса: лучше не запуститься, чем работать дырявым.
+const rawSecret = process.env.JWT_SECRET;
+if (!rawSecret || rawSecret.length < 32) {
+  throw new Error(
+    "JWT_SECRET не задан или короче 32 символов. " +
+    "Задайте надёжный секрет в переменных окружения перед запуском приложения."
+  );
+}
+const SECRET_KEY = new TextEncoder().encode(rawSecret);
 
 export async function signSession() {
   const token = await new SignJWT({ role: "admin" })
