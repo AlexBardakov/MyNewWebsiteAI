@@ -33,6 +33,14 @@ export function CategoryDialog({ category }: { category?: any }) {
     }
   }
 
+  // Обёртка для <form onSubmit>. См. подробный комментарий в product-dialog.tsx —
+  // <form action={localFn}> + Next.js 16 Turbopack ломают хэширование action ID.
+  async function onSubmitForm(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    await handleSubmit(formData);
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -46,7 +54,7 @@ export function CategoryDialog({ category }: { category?: any }) {
         <DialogHeader>
           <DialogTitle>{isEdit ? "Редактировать категорию" : "Новая категория"}</DialogTitle>
         </DialogHeader>
-        <form action={handleSubmit} className="space-y-4">
+        <form onSubmit={onSubmitForm} className="space-y-4">
           <div className="space-y-2">
             <Label>Название</Label>
             <Input name="name" defaultValue={category?.name} required />

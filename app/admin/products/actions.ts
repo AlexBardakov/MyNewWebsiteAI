@@ -3,9 +3,16 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { uploadFile } from "@/lib/upload";
+import { requireAdminSession, UnauthorizedError } from "@/lib/auth-server";
+
+// Все экспортируемые функции — server actions, привилегированные.
+// Каждая в первой строке вызывает requireAdminSession (defense in depth).
+// Если middleware был обойдён — здесь действие будет отвергнуто.
 
 export async function createProduct(prevState: any, formData: FormData) {
   try {
+    await requireAdminSession();
+
     const name = formData.get("name") as string;
     const priceRub = Number(formData.get("priceRub"));
 
@@ -48,6 +55,9 @@ export async function createProduct(prevState: any, formData: FormData) {
     revalidatePath("/admin/products");
     return { success: true };
   } catch (e) {
+    if (e instanceof UnauthorizedError) {
+      return { error: "Сессия истекла. Войдите снова." };
+    }
     console.error(e);
     return { error: "Ошибка создания товара" };
   }
@@ -55,6 +65,8 @@ export async function createProduct(prevState: any, formData: FormData) {
 
 export async function updateProduct(id: string, prevState: any, formData: FormData) {
   try {
+    await requireAdminSession();
+
     const name = formData.get("name") as string;
     const priceRub = Number(formData.get("priceRub"));
 
@@ -112,6 +124,9 @@ export async function updateProduct(id: string, prevState: any, formData: FormDa
     revalidatePath("/admin/products");
     return { success: true };
   } catch (e) {
+    if (e instanceof UnauthorizedError) {
+      return { error: "Сессия истекла. Войдите снова." };
+    }
     console.error(e);
     return { error: "Ошибка обновления товара" };
   }
@@ -119,16 +134,25 @@ export async function updateProduct(id: string, prevState: any, formData: FormDa
 
 export async function deleteProduct(id: string) {
   try {
+    await requireAdminSession();
+
     // Варианты удалятся сами благодаря onDelete: Cascade в схеме Prisma
     await db.product.delete({ where: { id } });
     revalidatePath("/admin/products");
   } catch (e) {
+    if (e instanceof UnauthorizedError) {
+      // Для void-action нет канала возврата — пробрасываем,
+      // Next.js покажет 500/redirect; для удаления это нормально.
+      throw e;
+    }
     console.error("Ошибка удаления:", e);
   }
 }
 
 export async function updateProductQuantity(id: string, remainder: number) {
   try {
+    await requireAdminSession();
+
     await db.product.update({
       where: { id },
       data: { remainder },
@@ -136,6 +160,9 @@ export async function updateProductQuantity(id: string, remainder: number) {
     revalidatePath("/admin/products");
     return { success: true };
   } catch (e) {
+    if (e instanceof UnauthorizedError) {
+      return { error: "Сессия истекла. Войдите снова." };
+    }
     console.error("Ошибка обновления остатка:", e);
     return { error: "Не удалось обновить остаток" };
   }

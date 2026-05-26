@@ -68,6 +68,14 @@ export function RecipeDialog({ categories, products, recipe }: RecipeDialogProps
     }
   }
 
+  // Обёртка для <form onSubmit>. См. подробный комментарий в product-dialog.tsx —
+  // <form action={localFn}> + Next.js 16 Turbopack ломаются хэширование action ID.
+  async function onSubmitForm(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    await handleSubmit(formData);
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -83,7 +91,7 @@ export function RecipeDialog({ categories, products, recipe }: RecipeDialogProps
         <DialogHeader>
           <DialogTitle>{recipe ? "Редактирование рецепта" : "Новый рецепт"}</DialogTitle>
         </DialogHeader>
-        <form action={handleSubmit} className="grid grid-cols-2 gap-6">
+        <form onSubmit={onSubmitForm} className="grid grid-cols-2 gap-6">
 
           {/* Название */}
           <div className="col-span-2 space-y-2">

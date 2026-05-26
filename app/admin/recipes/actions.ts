@@ -3,9 +3,12 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { uploadFile } from "@/lib/upload";
+import { requireAdminSession, UnauthorizedError } from "@/lib/auth-server";
 
 export async function createRecipe(prevState: any, formData: FormData) {
   try {
+    await requireAdminSession();
+
     const title = formData.get("title") as string;
     const categoryId = formData.get("categoryId") as string;
     const content = formData.get("content") as string;
@@ -35,6 +38,9 @@ export async function createRecipe(prevState: any, formData: FormData) {
     revalidatePath("/admin/recipes");
     return { success: true };
   } catch (e) {
+    if (e instanceof UnauthorizedError) {
+      return { error: "Сессия истекла. Войдите снова." };
+    }
     console.error(e);
     return { error: "Ошибка создания рецепта" };
   }
@@ -43,6 +49,8 @@ export async function createRecipe(prevState: any, formData: FormData) {
 // НОВАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ
 export async function updateRecipe(id: string, prevState: any, formData: FormData) {
     try {
+      await requireAdminSession();
+
       const title = formData.get("title") as string;
       const categoryId = formData.get("categoryId") as string;
       const content = formData.get("content") as string;
@@ -82,6 +90,9 @@ export async function updateRecipe(id: string, prevState: any, formData: FormDat
       revalidatePath("/admin/recipes");
       return { success: true };
     } catch (e) {
+      if (e instanceof UnauthorizedError) {
+        return { error: "Сессия истекла. Войдите снова." };
+      }
       console.error(e);
       return { error: "Ошибка обновления рецепта" };
     }
@@ -89,10 +100,15 @@ export async function updateRecipe(id: string, prevState: any, formData: FormDat
 
 export async function deleteRecipe(id: string) {
   try {
+    await requireAdminSession();
+
     await db.recipeProduct.deleteMany({ where: { recipeId: id }});
     await db.recipe.delete({ where: { id } });
     revalidatePath("/admin/recipes");
   } catch (e) {
-      console.error(e);
+    if (e instanceof UnauthorizedError) {
+      throw e;
+    }
+    console.error(e);
   }
 }

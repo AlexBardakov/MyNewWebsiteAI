@@ -30,9 +30,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
   }
 
-  // 4. ФИКС ОШИБКИ 500 ПРИ ЗАГРУЗКЕ ТОВАРОВ:
-  // Криптография (jwtVerify) в Edge ломает загрузку файлов (multipart/form-data).
-  // Раз базовый токен есть, пропускаем POST-запросы с файлами без глубокой расшифровки.
+  // 4. Обходной путь для multipart-запросов.
+  // ПРИЧИНА: jwtVerify в Edge runtime ломает обработку multipart/form-data
+  // в Next.js 16 + Turbopack (POST на /admin/products даёт 500 при загрузке файла).
+  // Здесь мы проверяем только ФАКТ наличия cookie `admin_session`, без расшифровки.
+  //
+  // БЕЗОПАСНОСТЬ: дыра, которая возникает из-за этого обхода (любой cookie проходит),
+  // закрыта на уровне самих server actions: каждая привилегированная функция в
+  // app/admin/*/actions.ts вызывает requireAdminSession() (см. lib/auth-server.ts),
+  // которая делает полный jwtVerify уже в Node runtime, где проблем нет.
+  // То есть это уровень "1.5" — мы пропускаем сверку в middleware, но action всё равно
+  // проверит JWT перед бизнес-логикой.
   if (
     request.method === "POST" &&
     request.headers.get("content-type")?.includes("multipart/form-data")
@@ -40,7 +48,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 5. Для обычных переходов по страницам делаем полную проверку токена
+  // 5. Для обычных запросов делаем полную проверку токена в middleware.
   try {
     await jwtVerify(token, SECRET_KEY);
     return NextResponse.next();

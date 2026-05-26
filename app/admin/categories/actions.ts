@@ -3,6 +3,7 @@
 import { db } from "@/lib/db"; // Убедитесь, что у вас есть этот файл (или prisma.ts)
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { requireAdminSession, UnauthorizedError } from "@/lib/auth-server";
 
 // Схема валидации
 const categorySchema = z.object({
@@ -13,14 +14,16 @@ const categorySchema = z.object({
 });
 
 export async function createCategory(prevState: any, formData: FormData) {
-  const data = Object.fromEntries(formData.entries());
-  const parsed = categorySchema.safeParse(data);
-
-  if (!parsed.success) {
-    return { error: "Ошибка валидации" };
-  }
-
   try {
+    await requireAdminSession();
+
+    const data = Object.fromEntries(formData.entries());
+    const parsed = categorySchema.safeParse(data);
+
+    if (!parsed.success) {
+      return { error: "Ошибка валидации" };
+    }
+
     await db.category.create({
       data: {
         name: parsed.data.name,
@@ -32,17 +35,22 @@ export async function createCategory(prevState: any, formData: FormData) {
     revalidatePath("/admin/categories");
     return { success: true };
   } catch (e) {
+    if (e instanceof UnauthorizedError) {
+      return { error: "Сессия истекла. Войдите снова." };
+    }
     return { error: "Ошибка при создании" };
   }
 }
 
 export async function updateCategory(id: string, prevState: any, formData: FormData) {
-  const data = Object.fromEntries(formData.entries());
-  const parsed = categorySchema.safeParse(data);
-
-  if (!parsed.success) return { error: "Ошибка валидации" };
-
   try {
+    await requireAdminSession();
+
+    const data = Object.fromEntries(formData.entries());
+    const parsed = categorySchema.safeParse(data);
+
+    if (!parsed.success) return { error: "Ошибка валидации" };
+
     await db.category.update({
       where: { id },
       data: {
@@ -56,15 +64,23 @@ export async function updateCategory(id: string, prevState: any, formData: FormD
     revalidatePath("/admin/categories");
     return { success: true };
   } catch (e) {
+    if (e instanceof UnauthorizedError) {
+      return { error: "Сессия истекла. Войдите снова." };
+    }
     return { error: "Не удалось обновить" };
   }
 }
 
 export async function deleteCategory(id: string) {
   try {
+    await requireAdminSession();
+
     await db.category.delete({ where: { id } });
     revalidatePath("/admin/categories");
   } catch (e) {
+    if (e instanceof UnauthorizedError) {
+      throw e;
+    }
     console.error(e);
   }
 }

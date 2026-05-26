@@ -2,9 +2,12 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { requireAdminSession, UnauthorizedError } from "@/lib/auth-server";
 
 // Получить все группы с товарами
 export async function getProductGroups() {
+  await requireAdminSession();
+
   const groups = await prisma.productGroup.findMany({
     orderBy: { name: 'asc' },
     include: {
@@ -20,6 +23,8 @@ export async function getProductGroups() {
 
 // Получить список всех товаров для выбора
 export async function getAllProducts() {
+  await requireAdminSession();
+
   const products = await prisma.product.findMany({
     where: { isActive: true },
     select: { id: true, name: true, category: { select: { name: true } } },
@@ -36,6 +41,8 @@ export async function createProductGroup(data: {
   productIds: string[];
 }) {
   try {
+    await requireAdminSession();
+
     await prisma.productGroup.create({
       data: {
         name: data.name,
@@ -52,6 +59,9 @@ export async function createProductGroup(data: {
     revalidatePath('/cheese-plate'); // Обновляем клиентский конструктор
     return { success: true };
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return { success: false, error: "Сессия истекла. Войдите снова." };
+    }
     console.error(error);
     return { success: false, error: 'Ошибка при создании группы' };
   }
@@ -65,6 +75,8 @@ export async function updateProductGroup(id: string, data: {
   productIds: string[];
 }) {
   try {
+    await requireAdminSession();
+
     // Используем транзакцию: обновляем поля и перезаписываем связи с товарами
     await prisma.$transaction(async (tx) => {
       // 1. Обновляем основные поля
@@ -98,6 +110,9 @@ export async function updateProductGroup(id: string, data: {
     revalidatePath('/cheese-plate');
     return { success: true };
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return { success: false, error: "Сессия истекла. Войдите снова." };
+    }
     console.error(error);
     return { success: false, error: 'Ошибка при обновлении группы' };
   }
@@ -106,11 +121,16 @@ export async function updateProductGroup(id: string, data: {
 // Удалить группу
 export async function deleteProductGroup(id: string) {
   try {
+    await requireAdminSession();
+
     await prisma.productGroup.delete({ where: { id } });
     revalidatePath('/admin/product-groups');
     revalidatePath('/cheese-plate');
     return { success: true };
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return { success: false, error: "Сессия истекла. Войдите снова." };
+    }
     return { success: false, error: 'Ошибка при удалении' };
   }
 }

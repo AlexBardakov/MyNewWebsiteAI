@@ -62,6 +62,16 @@ export function ProductDialog({ categories, product }: { categories: any[], prod
     }
   }
 
+  // Обёртка для <form onSubmit>. Раньше использовался <form action={handleSubmit}>,
+  // но Next.js 16 + Turbopack пытается интерпретировать переданную функцию как
+  // server action и неправильно хэширует её ID → 500 «Failed to find Server Action».
+  // onSubmit + new FormData(form) — чистый клиентский путь, не зависит от Turbopack.
+  async function onSubmitForm(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    await handleSubmit(formData);
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -75,7 +85,7 @@ export function ProductDialog({ categories, product }: { categories: any[], prod
         <DialogHeader>
           <DialogTitle>{isEdit ? "Редактировать товар" : "Новый товар"}</DialogTitle>
         </DialogHeader>
-        <form action={handleSubmit} className="grid grid-cols-2 gap-4">
+        <form onSubmit={onSubmitForm} className="grid grid-cols-2 gap-4">
 
           <div className="col-span-2 space-y-2">
             <Label>Название</Label>

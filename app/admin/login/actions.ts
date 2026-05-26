@@ -15,33 +15,12 @@ export async function loginAction(prevState: any, formData: FormData) {
   // bcrypt-хеш в ADMIN_PASSWORD_HASH; `verifyPassword` использует bcrypt.compare,
   // который constant-time и устойчив к timing-атакам.
   const expectedHash = process.env.ADMIN_PASSWORD_HASH;
-
-  // ============================================================
-  // ВРЕМЕННОЕ ДИАГНОСТИЧЕСКОЕ ЛОГИРОВАНИЕ (удалить после фикса!)
-  // Печатает в pm2 logs точную картину: что Next.js реально видит
-  // в process.env и какой результат bcrypt.compare.
-  // ============================================================
-  console.log("=== LOGIN DEBUG ===");
-  console.log("cwd:", process.cwd());
-  console.log("password length:", password?.length ?? "(no password)");
-  console.log("hash type:", typeof expectedHash);
-  console.log("hash length:", expectedHash?.length ?? 0, "(должно быть 60)");
-  if (expectedHash) {
-    console.log("hash starts with:", JSON.stringify(expectedHash.slice(0, 10)));
-    console.log("hash ends with:  ", JSON.stringify(expectedHash.slice(-10)));
-    console.log("hash bcrypt regex match:", /^\$2[aby]\$\d{1,2}\$.{53}$/.test(expectedHash));
-  }
-  const allAdminEnv = Object.keys(process.env)
-    .filter((k) => k.startsWith("ADMIN_"))
-    .map((k) => `${k}=(${(process.env[k] || "").length} chars)`);
-  console.log("all ADMIN_* env keys:", allAdminEnv);
-  console.log("===================");
-  // ============================================================
-
   if (!expectedHash) {
     console.error(
       "ADMIN_PASSWORD_HASH не задан в переменных окружения. " +
-      "Создайте хеш через npm run hash-password и добавьте его в env."
+      "Создайте хеш через `npx tsx scripts/hash-password.ts` и добавьте его в .env. " +
+      "ВАЖНО: в .env каждый знак $ в хеше экранируется как \\$ — иначе dotenv-expand " +
+      "интерпретирует $2a, $10 и т.д. как имена переменных и хеш будет мутирован."
     );
     return { error: "Ошибка конфигурации сервера", success: false };
   }
@@ -51,11 +30,6 @@ export async function loginAction(prevState: any, formData: FormData) {
   }
 
   const ok = await verifyPassword(password, expectedHash);
-
-  // === ВРЕМЕННОЕ ЛОГИРОВАНИЕ ===
-  console.log("verifyPassword result:", ok);
-  // =============================
-
   if (!ok) {
     return { error: "Неверный пароль", success: false };
   }
