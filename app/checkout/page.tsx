@@ -138,7 +138,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-10 max-w-4xl">
+    <div className="container mx-auto px-4 py-10 max-w-6xl">
       <Link href="/cart" className="inline-flex items-center text-muted-foreground hover:text-primary mb-6 transition-colors">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Вернуться в корзину
@@ -149,7 +149,7 @@ export default function CheckoutPage() {
       <div className="grid md:grid-cols-12 gap-8">
 
         {/* Левая колонка: Форма */}
-        <div className="md:col-span-7 bg-card border border-secondary rounded-3xl p-6 shadow-sm h-fit">
+        <div className="md:col-span-8 bg-card border border-secondary rounded-3xl p-6 shadow-sm h-fit">
           <form onSubmit={handleSubmit} className="space-y-6">
 
             <div className="space-y-4">
@@ -162,7 +162,7 @@ export default function CheckoutPage() {
                     required
                     placeholder="Иван"
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
                   />
                 </div>
                 <div className="space-y-2">
@@ -173,7 +173,7 @@ export default function CheckoutPage() {
                     type="tel"
                     placeholder="+7 (999) 000-00-00"
                     value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
                   />
                 </div>
               </div>
@@ -183,7 +183,7 @@ export default function CheckoutPage() {
               <h2 className="text-xl font-semibold">Способ получения</h2>
               <RadioGroup
                 value={formData.deliveryType}
-                onValueChange={(v: 'delivery' | 'pickup') => setFormData({...formData, deliveryType: v})}
+                onValueChange={(v: 'delivery' | 'pickup') => setFormData(prev => ({...prev, deliveryType: v}))}
                 className="grid grid-cols-2 gap-4"
               >
                 <div>
@@ -216,7 +216,7 @@ export default function CheckoutPage() {
                         <DeliveryMap
                             className="h-[300px] w-full rounded-xl overflow-hidden border"
                             address={formData.address}
-                            onAddressSelect={(addr) => setFormData({...formData, address: addr})}
+                            onAddressSelect={(addr) => setFormData(prev => ({...prev, address: addr}))}
                         />
                     </div>
 
@@ -230,7 +230,7 @@ export default function CheckoutPage() {
                               placeholder="Город, улица, дом..."
                               className="min-h-[60px] pl-10 pt-2"
                               value={formData.address}
-                              onChange={(e) => setFormData({...formData, address: e.target.value})}
+                              onChange={(e) => setFormData(prev => ({...prev, address: e.target.value}))}
                             />
                         </div>
                     </div>
@@ -243,7 +243,7 @@ export default function CheckoutPage() {
                                 id="entrance"
                                 placeholder=""
                                 value={addressDetails.entrance}
-                                onChange={(e) => setAddressDetails({...addressDetails, entrance: e.target.value})}
+                                onChange={(e) => setAddressDetails(prev => ({...prev, entrance: e.target.value}))}
                             />
                         </div>
                         <div className="space-y-1">
@@ -252,7 +252,7 @@ export default function CheckoutPage() {
                                 id="floor"
                                 placeholder=""
                                 value={addressDetails.floor}
-                                onChange={(e) => setAddressDetails({...addressDetails, floor: e.target.value})}
+                                onChange={(e) => setAddressDetails(prev => ({...prev, floor: e.target.value}))}
                             />
                         </div>
                         <div className="space-y-1">
@@ -261,7 +261,7 @@ export default function CheckoutPage() {
                                 id="apartment"
                                 placeholder=""
                                 value={addressDetails.apartment}
-                                onChange={(e) => setAddressDetails({...addressDetails, apartment: e.target.value})}
+                                onChange={(e) => setAddressDetails(prev => ({...prev, apartment: e.target.value}))}
                             />
                         </div>
                         <div className="space-y-1">
@@ -270,7 +270,7 @@ export default function CheckoutPage() {
                                 id="intercom"
                                 placeholder=""
                                 value={addressDetails.intercom}
-                                onChange={(e) => setAddressDetails({...addressDetails, intercom: e.target.value})}
+                                onChange={(e) => setAddressDetails(prev => ({...prev, intercom: e.target.value}))}
                             />
                         </div>
 
@@ -296,7 +296,7 @@ export default function CheckoutPage() {
                 id="comment"
                 placeholder="Можете указать пожелания по заказу или просто пожелать нам что-нибудь :)"
                 value={formData.comment}
-                onChange={(e) => setFormData({...formData, comment: e.target.value})}
+                onChange={(e) => setFormData(prev => ({...prev, comment: e.target.value}))}
               />
             </div>
 
@@ -354,7 +354,7 @@ export default function CheckoutPage() {
         </div>
 
         {/* Правая колонка: Сводка */}
-        <div className="md:col-span-5">
+        <div className="md:col-span-4">
           <div className="bg-secondary/10 rounded-3xl p-6 sticky top-24">
             <h2 className="text-xl font-bold mb-4">Ваш заказ</h2>
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">

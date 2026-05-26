@@ -105,74 +105,82 @@ export default function CartPage() {
             const isUnavailable = unavailableIds.includes(item.id);
 
             return (
-              <div key={item.id} className={`flex gap-4 p-4 rounded-2xl border bg-card shadow-sm items-center transition-all ${isUnavailable ? 'border-destructive/30 bg-secondary/10 opacity-60 grayscale' : 'border-secondary'}`}>
-                {/* Картинка */}
-                <div className="relative w-20 h-20 bg-secondary/20 rounded-lg overflow-hidden flex-shrink-0">
-                  {item.image ? (
-                    <Image src={item.image} alt={item.name} fill className="object-cover" />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Нет фото</div>
-                  )}
+              <div
+                key={item.id}
+                className={`flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border bg-card shadow-sm transition-all ${
+                  isUnavailable ? 'border-destructive/30 bg-secondary/10 opacity-60 grayscale' : 'border-secondary'
+                }`}
+              >
+                {/* Верхняя строка (на мобилке) / левая часть (на десктопе):
+                    картинка + название/бейджи. На мобилке занимает всю ширину. */}
+                <div className="flex gap-3 sm:gap-4 flex-1 min-w-0 items-start sm:items-center">
+                  {/* Картинка */}
+                  <div className="relative w-20 h-20 bg-secondary/20 rounded-lg overflow-hidden flex-shrink-0">
+                    {item.image ? (
+                      <Image src={item.image} alt={item.name} fill className="object-cover" />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Нет фото</div>
+                    )}
+                  </div>
+
+                  {/* Инфо: название + бейджи + тип */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-base sm:text-lg leading-tight flex items-center flex-wrap gap-x-2 gap-y-1">
+                      <span className={isUnavailable ? 'line-through' : ''}>{item.name}</span>
+                      {item.variant && (
+                        <Badge variant="secondary" className="text-xs font-normal text-muted-foreground px-1.5 py-0 h-5">
+                          {item.variant}
+                        </Badge>
+                      )}
+                      {isUnavailable && (
+                        <Badge variant="destructive" className="text-[10px] uppercase">Нет в наличии</Badge>
+                      )}
+                    </h3>
+                    <p className="text-muted-foreground text-xs sm:text-sm mt-1">
+                      {item.priceRub} ₽ / {item.unit === 'kg' ? 'кг' : 'шт'}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Инфо */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-lg leading-tight flex items-center flex-wrap gap-2">
-                    <span className={isUnavailable ? 'line-through' : ''}>{item.name}</span>
-                    {item.variant && (
-                       <Badge variant="secondary" className="text-xs font-normal text-muted-foreground px-1.5 py-0 h-5">
-                         {item.variant}
-                       </Badge>
-                    )}
-                    {isUnavailable && (
-                      <Badge variant="destructive" className="text-[10px] uppercase">Нет в наличии</Badge>
-                    )}
-                  </h3>
-                  <p className="text-muted-foreground text-sm mt-1">
-                    {item.unit === 'kg' ? 'Весовой товар' : 'Штучный товар'}
-                  </p>
-                  <div className="mt-1 font-bold text-primary md:hidden">
+                {/* Нижняя строка (на мобилке) / правая часть (на десктопе):
+                    управление + цена + удалить. На мобилке всё в одну строку
+                    с пространством между блоками. */}
+                <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 sm:flex-shrink-0 pl-[92px] sm:pl-0">
+                  {/* Управление количеством */}
+                  <div className={`flex items-center gap-1 rounded-lg p-1 ${isUnavailable ? 'pointer-events-none' : 'bg-secondary/20'}`}>
+                    <Button
+                      variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" disabled={isUnavailable}
+                      onClick={() => handleUpdateQuantity(item.id, Math.max(0, item.quantity - (item.step || 1)))}
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <span className="min-w-[3.5rem] sm:min-w-[4.5rem] text-center text-sm font-medium tabular-nums">
+                      {formatQuantity(item.quantity, item.unit)}
+                    </span>
+                    <Button
+                      variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" disabled={isUnavailable}
+                      onClick={() => handleUpdateQuantity(item.id, item.quantity + (item.step || 1))}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+
+                  {/* Цена строки — теперь видна и на мобилке, и на десктопе */}
+                  <div className="text-right whitespace-nowrap">
+                    <div className={`font-bold text-base sm:text-lg ${isUnavailable ? 'line-through text-muted-foreground' : ''}`}>
                       {isUnavailable ? '--- ₽' : formatPrice(item.priceRub * item.quantity)}
+                    </div>
                   </div>
-                </div>
 
-                {/* Управление кол-вом */}
-                <div className={`flex items-center gap-2 rounded-lg p-1 ${isUnavailable ? 'pointer-events-none' : 'bg-secondary/20'}`}>
+                  {/* Кнопка удаления работает всегда */}
                   <Button
-                    variant="ghost" size="icon" className="h-8 w-8" disabled={isUnavailable}
-                    onClick={() => handleUpdateQuantity(item.id, Math.max(0, item.quantity - (item.step || 1)))}
+                    variant="ghost" size="icon"
+                    className="text-muted-foreground hover:text-destructive pointer-events-auto flex-shrink-0"
+                    onClick={() => removeItem(item.id)}
                   >
-                    <Minus className="h-3 w-3" />
-                  </Button>
-                  <span className="min-w-[4.5rem] text-center text-sm font-medium tabular-nums">
-                    {formatQuantity(item.quantity, item.unit)}
-                  </span>
-                  <Button
-                    variant="ghost" size="icon" className="h-8 w-8" disabled={isUnavailable}
-                    onClick={() => handleUpdateQuantity(item.id, item.quantity + (item.step || 1))}
-                  >
-                    <Plus className="h-3 w-3" />
+                    <Trash2 className="h-5 w-5" />
                   </Button>
                 </div>
-
-                {/* Десктоп цена */}
-                <div className="hidden md:block text-right min-w-[120px]">
-                  <div className={`font-bold text-lg ${isUnavailable ? 'line-through text-muted-foreground' : ''}`}>
-                    {isUnavailable ? '--- ₽' : formatPrice(item.priceRub * item.quantity)}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {item.priceRub} ₽ / {item.unit === 'kg' ? 'кг' : 'шт'}
-                  </div>
-                </div>
-
-                {/* Кнопка удаления работает всегда */}
-                <Button
-                  variant="ghost" size="icon"
-                  className="text-muted-foreground hover:text-destructive pointer-events-auto"
-                  onClick={() => removeItem(item.id)}
-                >
-                  <Trash2 className="h-5 w-5" />
-                </Button>
               </div>
             );
           })}
