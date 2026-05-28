@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display, Lora } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/header";
 import Footer from "@/components/footer";
@@ -7,7 +7,32 @@ import Footer from "@/components/footer";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/cookie-consent";
 
-const inter = Inter({ subsets: ["latin", "cyrillic"] });
+// Inter — основной sans-serif для текста (читаемость, нейтральность).
+const inter = Inter({
+  subsets: ["latin", "cyrillic"],
+  display: "swap",
+  variable: "--font-sans",
+});
+
+// Playfair Display — серифный шрифт для КРУПНЫХ заголовков (h1, h2).
+// Высококонтрастный didone-сериф — шикарен на размерах 24px+, но тонкие штрихи
+// "теряются" на мелких размерах. Поэтому для h3, h4 используется Lora (см. ниже).
+const playfair = Playfair_Display({
+  subsets: ["latin", "cyrillic"],
+  display: "swap",
+  variable: "--font-serif-display",
+  weight: ["400", "600", "700"],
+});
+
+// Lora — сериф для МЕЛКИХ заголовков (h3, h4). Низкий контраст штрихов,
+// специально создана для веба, отлично читается на любых размерах.
+// Стилистически совместима с Playfair — оба классические серифы.
+const lora = Lora({
+  subsets: ["latin", "cyrillic"],
+  display: "swap",
+  variable: "--font-serif",
+  weight: ["400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://fourkings.ru"),
@@ -45,8 +70,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
-      <body className={inter.className}>
+    <html lang="ru" className={`${inter.variable} ${playfair.variable} ${lora.variable}`}>
+      <body className="font-sans antialiased">
         <div className="flex min-h-screen flex-col">
           <Header />
           <main className="flex-1">{children}</main>

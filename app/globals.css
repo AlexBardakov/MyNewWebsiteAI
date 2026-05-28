@@ -9,8 +9,24 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+
+  /* Шрифты. Подключение конкретных шрифтов — в app/layout.tsx через next/font.
+     --font-serif         → Lora      (для h3, h4 — мелкие заголовки, текст серифом)
+     --font-serif-display → Playfair  (для h1, h2 — крупные заголовки страниц/секций) */
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-serif-display: var(--font-serif-display);
   --font-mono: var(--font-geist-mono);
+
+  /* === ДИЗАЙН-СИСТЕМА FOUR KINGS === */
+  /* Брендовые цвета, см. их семантические значения в :root ниже. */
+  --color-brand-cream: var(--brand-cream);
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-gold-deep: var(--brand-gold-deep);
+  --color-brand-cheese: var(--brand-cheese);
+  --color-brand-charcoal: var(--brand-charcoal);
+  --color-brand-mute: var(--brand-mute);
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -53,85 +69,101 @@ html {
   scroll-behavior: smooth;
 }
 
-/* СВЕТЛАЯ ТЕМА (Основная) */
+/* =============================================================
+   FOUR KINGS — Дизайн-система v1
+   Идея: тёплый винтажный крафт-премиум с королевским намёком.
+   Палитра — 4 цвета: тёплый кремовый фон, угольный текст,
+   мягкий золотой (главный акцент), жёлтый-сыр (бейджи/акцент).
+   Чёрный — НЕ используется как фон, только угольный с теплинкой.
+   Подробности: docs/design-system.md (если хочешь — заведём отдельно).
+   ============================================================= */
 :root {
-  --radius: 0.75rem;
+  --radius: 0.625rem;  /* Чуть строже, чем было (0.75) — премиальнее */
 
-  --background: oklch(0.98 0.01 85);           /* Белый фон */
-  --foreground: oklch(0.145 0 0);       /* Темно-серый текст */
+  /* === БРЕНДОВЫЕ ТОКЕНЫ === */
+  --brand-cream:      oklch(0.974 0.012 85);   /* Тёплый кремовый — основной фон страниц */
+  --brand-gold:       oklch(0.735 0.135 78);   /* Мягкий золотой — главный акцент (повышена насыщенность с 0.105 до 0.135 — больше "металлического блеска") */
+  --brand-gold-light: oklch(0.825 0.110 80);   /* Светлый золотой — верхняя часть градиента / блик */
+  --brand-gold-deep:  oklch(0.620 0.140 75);   /* Глубокий золотой — hover/pressed (углублённый янтарный) */
+  --brand-cheese:     oklch(0.820 0.140 90);   /* Жёлтый сыра — для бейджей "новинка/хит" */
+  --brand-charcoal:   oklch(0.190 0.008 60);   /* Тёплый угольный — текст, тёмные секции */
+  --brand-mute:       oklch(0.470 0.015 60);   /* Приглушённый текст — подписи, метаданные */
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  /* === СЕМАНТИЧЕСКИЕ ТОКЕНЫ shadcn (используют брендовые выше) === */
+  --background:           var(--brand-cream);
+  --foreground:           var(--brand-charcoal);
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --card:                 oklch(1 0 0);             /* Чистый белый для карточек — контраст с кремовым фоном */
+  --card-foreground:      var(--brand-charcoal);
 
-  --primary: oklch(0.76 0.16 70);
-  --primary-foreground: oklch(0.205 0 0);
+  --popover:              oklch(1 0 0);
+  --popover-foreground:   var(--brand-charcoal);
 
-  --secondary: oklch(0.96 0.04 85);
-  --secondary-foreground: oklch(0.205 0 0);
+  --primary:              var(--brand-gold);         /* Мягкий золотой — CTA, главные кнопки, цены */
+  --primary-foreground:   var(--brand-charcoal);     /* Тёмный текст на золоте, не белый */
 
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --secondary:            oklch(0.955 0.022 85);     /* Светлый кремово-золотой — второстепенные блоки */
+  --secondary-foreground: var(--brand-charcoal);
 
-  --accent: oklch(0.97 0.04 85);
-  --accent-foreground: oklch(0.205 0 0);
+  --muted:                oklch(0.955 0.012 85);     /* Очень мягкий фон для блоков-вставок */
+  --muted-foreground:     var(--brand-mute);
 
-  --destructive: oklch(0.577 0.245 27.325);
+  --accent:               var(--brand-cheese);       /* Жёлтый сыра — бейджи "новинка", акцентные подсветки */
+  --accent-foreground:    var(--brand-charcoal);
+
+  --destructive:          oklch(0.577 0.180 27);     /* Красно-кирпичный — теплее стандартного */
   --destructive-foreground: oklch(1 0 0);
 
-  --border: oklch(0.92 0 0);
-  --input: oklch(0.92 0 0);
-  --ring: oklch(0.76 0.16 70); /* Желтое кольцо фокуса */
+  --border:               oklch(0.890 0.025 85);     /* Тонкие кремово-золотые "волоски" */
+  --input:                oklch(0.920 0.020 85);
+  --ring:                 var(--brand-gold);         /* Фокус — мягкий золотой */
 
-  /* Графики (можно оставить дефолтными или подогнать) */
-  --chart-1: oklch(0.76 0.16 70);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --chart-1: var(--brand-gold);
+  --chart-2: var(--brand-cheese);
+  --chart-3: var(--brand-gold-deep);
+  --chart-4: oklch(0.65 0.08 50);
+  --chart-5: oklch(0.55 0.10 65);
 
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar:                      oklch(0.96 0.012 85);
+  --sidebar-foreground:           var(--brand-charcoal);
+  --sidebar-primary:              var(--brand-gold);
+  --sidebar-primary-foreground:   var(--brand-charcoal);
+  --sidebar-accent:               oklch(0.94 0.015 85);
+  --sidebar-accent-foreground:    var(--brand-charcoal);
+  --sidebar-border:               oklch(0.890 0.025 85);
+  --sidebar-ring:                 var(--brand-gold);
 }
 
-/* ТЕМНАЯ ТЕМА */
+/* ТЕМНАЯ ТЕМА — пока не задействована (нет ThemeProvider), но синхронизирована с брендом
+   на случай если в будущем подключим. Тёплый угольный фон + золото на нём — как в логотипе. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
+  --background:           var(--brand-charcoal);
+  --foreground:           var(--brand-cream);
 
-  --card: oklch(0.20 0 0);
-  --card-foreground: oklch(0.985 0 0);
+  --card:                 oklch(0.235 0.010 60);     /* чуть светлее угольного */
+  --card-foreground:      var(--brand-cream);
 
-  --popover: oklch(0.20 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  --popover:              oklch(0.235 0.010 60);
+  --popover-foreground:   var(--brand-cream);
 
-  /* В темной теме желтый можно сделать чуть менее ярким или оставить как акцент */
-  --primary: oklch(0.76 0.16 70);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary:              var(--brand-gold);
+  --primary-foreground:   var(--brand-charcoal);
 
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
+  --secondary:            oklch(0.280 0.012 60);
+  --secondary-foreground: var(--brand-cream);
 
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
+  --muted:                oklch(0.280 0.012 60);
+  --muted-foreground:     oklch(0.720 0.012 60);
 
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent:               var(--brand-cheese);
+  --accent-foreground:    var(--brand-charcoal);
 
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
+  --destructive:          oklch(0.704 0.191 22);
+  --destructive-foreground: var(--brand-cream);
 
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.76 0.16 70);
+  --border:               oklch(1 0 0 / 12%);
+  --input:                oklch(1 0 0 / 16%);
+  --ring:                 var(--brand-gold);
 }
 
 @layer base {
@@ -141,4 +173,54 @@ html {
   body {
     @apply bg-background text-foreground;
   }
+  /* Иерархия заголовков использует ДВА серифа по семантическому размеру:
+     - h1, h2 — Playfair Display (крупные, "вернисажные" заголовки страниц и секций);
+     - h3, h4 — Lora (мелкие заголовки в карточках; низкий контраст штрихов = читаемость).
+     Это гарантирует и красоту крупных заголовков, и читаемость мелких. */
+  h1, h2 {
+    font-family: var(--font-serif-display), Georgia, serif;
+    @apply tracking-tight;
+  }
+  h3, h4 {
+    font-family: var(--font-serif), Georgia, serif;
+    @apply tracking-tight;
+  }
+  h1 { font-weight: 700; }
+  h2 { font-weight: 600; }
+  h3 { font-weight: 600; }
+  h4 { font-weight: 600; }
+
+  /* Цифры (цены, остатки, телефоны) — табличные пропорции для аккуратного выравнивания. */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* =============================================================
+   ЭФФЕКТ БЛИКА на primary-кнопках (золотое сияние при hover).
+   Subtle linear-gradient, который смещается из-за позиции при наведении.
+   Имитирует отражение света на металле. Применяется ко всем кнопкам shadcn
+   с variant="default" автоматически (там bg-primary).
+   ============================================================= */
+.bg-primary,
+[data-slot="button"][class*="bg-primary"] {
+  background-image: linear-gradient(
+    135deg,
+    var(--brand-gold-light) 0%,
+    var(--brand-gold) 35%,
+    var(--brand-gold) 65%,
+    var(--brand-gold-deep) 100%
+  );
+  background-size: 200% 200%;
+  background-position: 50% 50%;
+  transition: background-position 0.45s ease, box-shadow 0.3s ease, transform 0.15s ease;
+}
+.bg-primary:hover,
+[data-slot="button"][class*="bg-primary"]:hover {
+  background-position: 0% 100%;        /* блик "смещается" — эффект отражения */
+  box-shadow: 0 4px 14px -2px oklch(0.620 0.140 75 / 0.35);
+}
+.bg-primary:active,
+[data-slot="button"][class*="bg-primary"]:active {
+  transform: translateY(1px);
 }

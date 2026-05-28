@@ -111,7 +111,7 @@ export function ProductCard({ product }: Props) {
         {/* Контент карточки */}
         <div className="flex flex-1 flex-col p-4 gap-2">
           <div className="flex-1">
-            <h3 className="font-semibold leading-tight line-clamp-2" title={product.name}>
+            <h3 className="leading-snug line-clamp-2" title={product.name}>
               {product.name}
             </h3>
           </div>

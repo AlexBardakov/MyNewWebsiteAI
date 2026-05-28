@@ -29,7 +29,7 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
 
         {/* Логотип (Десктоп + Мобайл шапка) */}
@@ -47,14 +47,16 @@ export function Header() {
         </Link>
 
         {/* Десктопное меню */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-7">
           {routes.map((route) => (
             <Link
               key={route.href}
               href={route.href}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                pathname === route.href ? "text-foreground" : "text-muted-foreground"
+                "text-sm font-medium tracking-wide transition-colors hover:text-primary",
+                pathname === route.href
+                  ? "text-primary"                                /* активный — золотой */
+                  : "text-foreground/70 hover:text-foreground"    /* неактивный — тёплый угольный с opacity */
               )}
             >
               {route.label}

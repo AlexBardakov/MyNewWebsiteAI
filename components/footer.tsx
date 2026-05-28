@@ -3,7 +3,7 @@ import { Phone, MapPin, Clock } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="border-t bg-white border-gray-100 py-12 mt-auto">
+    <footer className="border-t bg-card border-border py-12 mt-auto">
       <div className="container mx-auto px-4 md:px-8">
 
         {/* Сетка из 3 колонок */}
