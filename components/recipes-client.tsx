@@ -44,7 +44,7 @@ export default function RecipesClient({ initialRecipes, categories }: RecipesCli
     <div className="min-h-screen bg-gray-50/30 pb-20">
 
       {/* Меню категорий */}
-      <div className="sticky top-16 z-40 bg-white/80 backdrop-blur-md border-b shadow-sm transition-all">
+      <div className="sticky top-16 z-40 bg-card/85 backdrop-blur-md border-b border-border shadow-sm transition-all">
         <div className="container mx-auto px-4 md:px-0">
             <div className="flex items-center h-14 overflow-x-auto no-scrollbar gap-2">
                <Button
@@ -55,7 +55,7 @@ export default function RecipesClient({ initialRecipes, categories }: RecipesCli
                >
                  Все
                </Button>
-               <div className="h-4 w-px bg-gray-300 mx-1 flex-shrink-0" />
+               <div className="h-4 w-px bg-border mx-1 flex-shrink-0" />
               {categories.map((cat) => (
                 <Button
                   key={cat.id}
@@ -66,7 +66,7 @@ export default function RecipesClient({ initialRecipes, categories }: RecipesCli
                     "rounded-full whitespace-nowrap transition-all text-sm px-4",
                     activeCategory === cat.id
                       ? "bg-primary/10 text-primary font-semibold hover:bg-primary/20"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                      : "text-foreground/70 hover:text-foreground hover:bg-secondary"
                   )}
                 >
                   {cat.name}
@@ -95,7 +95,7 @@ export default function RecipesClient({ initialRecipes, categories }: RecipesCli
 
           return (
             <section key={category.id} id={`category-${category.id}`} className="scroll-mt-40">
-              <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 flex items-center gap-3">
+              <h2 className="text-xl md:text-2xl mb-4 md:mb-6 text-foreground flex items-center gap-3">
                  {category.name}
               </h2>
 
@@ -125,7 +125,7 @@ export default function RecipesClient({ initialRecipes, categories }: RecipesCli
                       </div>
 
                       <div className="flex flex-1 flex-col p-3 md:p-5">
-                        <h3 className="text-sm md:text-lg font-bold text-gray-900 mb-1 md:mb-2 group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+                        <h3 className="text-sm md:text-lg text-foreground mb-1 md:mb-2 group-hover:text-primary transition-colors line-clamp-2 leading-tight">
                           {recipe.title}
                         </h3>
 
@@ -135,7 +135,7 @@ export default function RecipesClient({ initialRecipes, categories }: RecipesCli
                           </p>
                         )}
 
-                        <div className="mt-auto pt-2 md:pt-4 border-t border-dashed border-gray-100 flex items-center justify-end">
+                        <div className="mt-auto pt-2 md:pt-4 border-t border-dashed border-border flex items-center justify-end">
                           <span className="text-[10px] md:text-sm font-semibold text-primary group-hover:translate-x-1 transition-transform inline-flex items-center">
                             Читать
                             <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -155,7 +155,7 @@ export default function RecipesClient({ initialRecipes, categories }: RecipesCli
         {/* Другие рецепты */}
         {initialRecipes.filter(r => !r.categoryId).length > 0 && (
             <section className="scroll-mt-40">
-                <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900">Другие рецепты</h2>
+                <h2 className="text-xl md:text-2xl mb-4 md:mb-6 text-foreground">Другие рецепты</h2>
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
                     {initialRecipes.filter(r => !r.categoryId).map((recipe) => (
                          <div key={recipe.id} onClick={() => openRecipe(recipe)} className="group block h-full cursor-pointer">
@@ -168,9 +168,9 @@ export default function RecipesClient({ initialRecipes, categories }: RecipesCli
                                 )}
                               </div>
                               <div className="flex flex-1 flex-col p-3 md:p-5">
-                                <h3 className="text-sm md:text-lg font-bold text-gray-900 mb-1 md:mb-2 group-hover:text-primary transition-colors line-clamp-2 leading-tight">{recipe.title}</h3>
+                                <h3 className="text-sm md:text-lg text-foreground mb-1 md:mb-2 group-hover:text-primary transition-colors line-clamp-2 leading-tight">{recipe.title}</h3>
                                 {recipe.shortDescription && <p className="text-muted-foreground text-[10px] md:text-sm line-clamp-2 md:line-clamp-3 mb-2 md:mb-4 flex-1 leading-relaxed">{recipe.shortDescription}</p>}
-                                <div className="mt-auto pt-2 md:pt-4 border-t border-dashed border-gray-100 flex items-center justify-end">
+                                <div className="mt-auto pt-2 md:pt-4 border-t border-dashed border-border flex items-center justify-end">
                                   <span className="text-[10px] md:text-sm font-semibold text-primary group-hover:translate-x-1 transition-transform inline-flex items-center">Читать <svg className="w-3 h-3 md:w-4 md:h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg></span>
                                 </div>
                               </div>

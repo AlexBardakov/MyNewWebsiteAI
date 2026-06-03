@@ -78,7 +78,7 @@ export function ProductCard({ product }: Props) {
   return (
     <>
       <div
-        className="group flex flex-col h-full rounded-2xl border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md cursor-pointer overflow-hidden"
+        className="group flex flex-col h-full rounded-2xl border border-border bg-card text-card-foreground shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer overflow-hidden"
         onClick={() => setIsModalOpen(true)}
       >
         {/* Блок изображения */}
@@ -89,7 +89,7 @@ export function ProductCard({ product }: Props) {
               alt={product.name}
               fill
               className={cn(
-                "object-cover transition-transform duration-300 group-hover:scale-105",
+                "object-cover transition-transform duration-500 group-hover:scale-105",
                 isOutOfStock && "blur-[3px] opacity-70 grayscale-[20%]"
               )}
             />
@@ -101,49 +101,55 @@ export function ProductCard({ product }: Props) {
 
           {isOutOfStock && (
             <div className="absolute inset-0 flex items-center justify-center p-4 text-center z-10">
-              <span className="text-[#be123c]/90 font-semibold text-sm sm:text-base leading-snug bg-white/50 px-4 py-2.5 rounded-2xl backdrop-blur-md border border-white/40 shadow-sm transition-all select-none">
+              {/* Бейдж "out of stock" в брендовом стиле: тёплый угольный текст на
+                  кремовой плашке с тонким золотым бордером (вместо красного и белого). */}
+              <span className="text-foreground/85 font-semibold text-sm sm:text-base leading-snug bg-background/85 px-4 py-2.5 rounded-2xl backdrop-blur-md border border-primary/30 shadow-sm select-none">
                 Так вкусно,<br />что всё съели!
               </span>
             </div>
           )}
         </div>
 
-        {/* Контент карточки */}
-        <div className="flex flex-1 flex-col p-4 gap-2">
+        {/* Контент карточки — mobile-first padding и gap (компактнее на узких экранах). */}
+        <div className="flex flex-1 flex-col p-3 sm:p-4 gap-2.5">
           <div className="flex-1">
-            <h3 className="leading-snug line-clamp-2" title={product.name}>
+            {/* Заголовок: text-base на мобилке (16px, читаемо), text-lg на десктопе (18px).
+                Шрифт — Lora 600 наследуется глобально для h3. */}
+            <h3 className="text-base sm:text-lg leading-snug line-clamp-2" title={product.name}>
               {product.name}
             </h3>
           </div>
 
-          {/* Блок цены и шага */}
-          <div className="mt-2 space-y-1">
+          {/* Блок цены и шага.
+              Цена — text-lg на мобилке, text-xl на десктопе. Цвет foreground (без золота —
+              чтобы не конкурировала с золотой кнопкой "В корзину" по визуальному весу). */}
+          <div className="space-y-0.5">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-lg font-bold">
+              <span className="text-lg sm:text-xl font-bold tabular-nums text-foreground">
                 {product.priceRub.toLocaleString('ru-RU')} ₽
               </span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs sm:text-sm text-muted-foreground">
                 / {product.unit === 'kg' ? 'кг' : 'шт.'}
               </span>
             </div>
 
             {product.unit === 'kg' && !isOutOfStock && (
-              <div className="text-xs text-muted-foreground font-medium">
+              <div className="text-xs text-muted-foreground/80 font-medium">
                 Шаг ≈ {step.toLocaleString('ru-RU')} кг
               </div>
             )}
           </div>
 
-          {/* Кнопки действий */}
-          <div className="mt-2 pt-2 border-t border-dashed">
+          {/* Кнопки действий — тонкая граница border-border (без dashed для премиальности).
+              Высота кнопки h-10 — комфортный tap target на мобилке (≥44px по Apple HIG). */}
+          <div className="mt-1 pt-2.5 border-t border-border/60">
             {isOutOfStock ? (
-               <Button disabled variant="outline" className="w-full opacity-50 cursor-not-allowed">
+               <Button disabled variant="outline" className="w-full h-10 opacity-60 cursor-not-allowed">
                  Нет в наличии
                </Button>
             ) : hasVariants ? (
               <Button
-                className="w-full gap-2 font-semibold bg-primary/90 hover:bg-primary"
-                size="sm"
+                className="w-full h-10 gap-2 font-semibold"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsModalOpen(true);
@@ -153,22 +159,22 @@ export function ProductCard({ product }: Props) {
                 Выбрать
               </Button>
             ) : isInCart ? (
-              <div className="flex items-center justify-between bg-secondary/30 rounded-lg p-1">
+              <div className="flex items-center justify-between bg-secondary rounded-lg p-1">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-md bg-white shadow-sm hover:bg-white/90"
+                  className="h-9 w-9 rounded-md bg-card border border-border shadow-sm hover:bg-card/90"
                   onClick={handleDecrease}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-semibold w-full text-center">
+                <span className="text-sm font-semibold tabular-nums w-full text-center">
                   {cartItem.quantity.toLocaleString('ru-RU')} {product.unit === 'kg' ? 'кг' : 'шт'}
                 </span>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-md bg-white shadow-sm hover:bg-white/90"
+                  className="h-9 w-9 rounded-md bg-card border border-border shadow-sm hover:bg-card/90"
                   onClick={handleIncrease}
                 >
                   <Plus className="h-4 w-4" />
@@ -176,8 +182,7 @@ export function ProductCard({ product }: Props) {
               </div>
             ) : (
               <Button
-                className="w-full gap-2 font-semibold"
-                size="sm"
+                className="w-full h-10 gap-2 font-semibold"
                 onClick={handleAdd}
               >
                 <ShoppingCart className="h-4 w-4" />

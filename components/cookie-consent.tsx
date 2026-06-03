@@ -61,8 +61,8 @@ export function CookieConsent() {
       aria-label="Уведомление об использовании cookies"
       className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 sm:px-4 sm:pb-4 pointer-events-none"
     >
-      <div className="mx-auto max-w-3xl pointer-events-auto rounded-2xl border border-gray-200 bg-white/95 backdrop-blur shadow-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
-        <p className="text-sm text-gray-700 leading-relaxed flex-1">
+      <div className="mx-auto max-w-3xl pointer-events-auto rounded-2xl border border-border bg-card/95 backdrop-blur shadow-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
+        <p className="text-sm text-foreground/80 leading-relaxed flex-1">
           Сайт использует только технически необходимые cookies (для работы
           корзины и защищённой части сайта). Подробнее — в{" "}
           <Link href="/privacy" className="font-medium text-primary hover:underline">
@@ -82,7 +82,7 @@ export function CookieConsent() {
             type="button"
             onClick={dismiss}
             aria-label="Закрыть уведомление"
-            className="hidden sm:inline-flex h-10 w-10 items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            className="hidden sm:inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
             <X className="h-5 w-5" />
           </button>

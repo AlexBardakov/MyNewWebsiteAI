@@ -12,7 +12,7 @@ export default function Footer() {
           {/* 1. ЛЕВАЯ КОЛОНКА: Организация */}
           <div className="flex flex-col gap-4">
             <div>
-               <h3 className="font-bold text-xl text-gray-900 mb-2">Сыроварня Four Kings</h3>
+               <h3 className="font-bold text-xl text-foreground mb-2">Сыроварня Four Kings</h3>
                <p className="text-sm text-muted-foreground leading-relaxed">
                  Производство крафтовых сыров со знаком качества.<br/><br/>
                  ИП Фокин Константин Васильевич<br/>
@@ -29,7 +29,7 @@ export default function Footer() {
 
           {/* 2. СРЕДНЯЯ КОЛОНКА: Навигация (Карта сайта) */}
           <div className="flex flex-col gap-4">
-            <h3 className="font-semibold text-gray-900">Навигация</h3>
+            <h3 className="font-semibold text-foreground">Навигация</h3>
             <nav className="flex flex-col gap-2 text-sm text-muted-foreground">
               <Link href="/catalog" className="hover:text-primary transition-colors w-fit">Каталог товаров</Link>
               <Link href="/cheese-plate" className="hover:text-primary transition-colors w-fit">Сырная тарелка</Link>
@@ -45,21 +45,21 @@ export default function Footer() {
 
           {/* 3. ПРАВАЯ КОЛОНКА: Контакты и Соцсети */}
           <div className="flex flex-col gap-4">
-            <h3 className="font-semibold text-gray-900">Контакты</h3>
+            <h3 className="font-semibold text-foreground">Контакты</h3>
             <div className="flex flex-col gap-4 text-sm text-muted-foreground">
 
               <a href="tel:+79609707018" className="flex items-center gap-3 hover:text-primary transition-colors group">
                 <div className="p-2 bg-secondary/30 rounded-full group-hover:bg-primary/10 transition-colors">
-                    <Phone className="w-4 h-4 text-gray-900 group-hover:text-primary" />
+                    <Phone className="w-4 h-4 text-foreground group-hover:text-primary" />
                 </div>
-                <span className="font-bold text-lg text-gray-900 group-hover:text-primary transition-colors">
+                <span className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">
                     +7 (960) 970-70-18
                 </span>
               </a>
 
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-secondary/30 rounded-full mt-[-2px]">
-                    <MapPin className="w-4 h-4 text-gray-900" />
+                    <MapPin className="w-4 h-4 text-foreground" />
                 </div>
                 <span className="leading-relaxed">
                     г. Томск, ул. Мокрушина 9с15
@@ -68,14 +68,14 @@ export default function Footer() {
 
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-secondary/30 rounded-full">
-                    <Clock className="w-4 h-4 text-gray-900" />
+                    <Clock className="w-4 h-4 text-foreground" />
                 </div>
                 <span>Вт-Пт с 10:00 до 21:00<br/>Сб с 12:00 до 20:00<br/>Вс-Пн - выходной</span>
               </div>
 
               {/* БЛОК СОЦСЕТЕЙ */}
               <div className="mt-2 flex flex-col gap-3">
-                <span className="font-semibold text-gray-900">Наши соцсети:</span>
+                <span className="font-semibold text-foreground">Наши соцсети:</span>
                 <div className="flex items-center gap-4">
 
                   <a

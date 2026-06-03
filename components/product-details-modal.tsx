@@ -92,20 +92,32 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-4xl w-[95vw] p-0 gap-0 bg-white rounded-2xl border-none shadow-xl flex flex-col md:flex-row md:items-start h-auto max-h-[90vh] md:max-h-fit">
+      {/* DialogContent — современный mobile bottom-sheet паттерн:
+          - Mobile (по умолчанию): h-[95dvh] — почти весь экран (dvh = dynamic viewport
+            height, учитывает мобильные UI-бары браузера, в отличие от vh).
+          - Desktop (md+): h-auto + max-h-[88vh] — авто по контенту, но не больше 88%.
+          - overflow-hidden на корне + flex-1 + overflow-y-auto на контенте даёт
+            корректный внутренний скролл, без потери футера за пределами экрана. */}
+      <DialogContent
+        className="!max-w-4xl w-[95vw] p-0 gap-0 bg-card rounded-2xl border-none shadow-xl
+                   flex flex-col md:flex-row md:items-stretch
+                   h-[95dvh] md:h-auto md:max-h-[88vh]
+                   overflow-hidden"
+      >
 
         <DialogTitle className="sr-only">{product.name}</DialogTitle>
         <DialogDescription className="sr-only">Детали товара</DialogDescription>
 
         <button
             onClick={() => onOpenChange(false)}
-            className="absolute right-4 top-4 z-50 p-2 bg-black/5 hover:bg-black/10 rounded-full transition-colors backdrop-blur-sm md:hidden"
+            className="absolute right-4 top-4 z-50 p-2 bg-background/70 hover:bg-background/90 rounded-full transition-colors backdrop-blur-sm md:hidden"
         >
-            <X className="w-5 h-5 text-black/70" />
+            <X className="w-5 h-5 text-foreground/80" />
         </button>
 
-        {/* ЛЕВАЯ ЧАСТЬ (Фото) */}
-        <div className="relative w-full md:w-[40%] h-[250px] md:h-auto md:aspect-square bg-secondary/10 flex-shrink-0 overflow-hidden rounded-t-2xl md:rounded-2xl md:m-1">
+        {/* ЛЕВАЯ ЧАСТЬ (Фото) — на мобиле фиксированная высота, на десктопе квадрат.
+            flex-shrink-0 чтобы фото не сжималось при нехватке места. */}
+        <div className="relative w-full md:w-[40%] h-[220px] sm:h-[260px] md:h-auto md:aspect-square bg-secondary/10 flex-shrink-0 overflow-hidden rounded-t-2xl md:rounded-2xl md:m-1">
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
@@ -122,16 +134,22 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
           )}
 
            <div className="absolute top-4 left-4">
-              <Badge variant="secondary" className="bg-white/90 text-black shadow-sm text-xs px-2 py-0.5 backdrop-blur-md border-0">
+              <Badge variant="secondary" className="bg-background/85 text-foreground shadow-sm text-xs px-2 py-0.5 backdrop-blur-md border border-border">
                  {isWeighable ? "Весовой" : "Штучный"}
               </Badge>
           </div>
         </div>
 
-        {/* ПРАВАЯ ЧАСТЬ (Контент) */}
-        <div className="flex flex-col w-full md:w-[60%] bg-white md:min-h-[400px] rounded-b-2xl md:rounded-r-2xl">
+        {/* ПРАВАЯ ЧАСТЬ (Контент) — критичные классы для корректного скролла:
+            - flex-1 — занимает оставшееся пространство в родительском flex;
+            - min-h-0 — позволяет flex-child быть МЕНЬШЕ своего контента
+              (без этого default min-height: auto не даст overflow-y-auto работать);
+            - overflow-hidden — обрезает выходящий контент, чтобы внутренний скролл взял на себя. */}
+        <div className="flex flex-col w-full md:w-[60%] flex-1 min-h-0 bg-card overflow-hidden rounded-b-2xl md:rounded-r-2xl">
 
-           <div className="flex-grow overflow-y-auto custom-scrollbar p-6 md:p-8 max-h-[60vh] md:max-h-[500px]">
+           {/* Скроллируемая область — flex-1 занимает всё свободное пространство
+               после футера. max-h убран — высота вычисляется автоматически. */}
+           <div className="flex-1 overflow-y-auto custom-scrollbar p-5 md:p-8">
               <div className="mb-1">
                  {product.category && (
                     <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -140,7 +158,7 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
                  )}
               </div>
 
-              <h2 className="text-2xl md:text-3xl font-bold leading-tight text-gray-900 mb-2">
+              <h2 className="text-2xl md:text-3xl leading-tight text-foreground mb-2">
                   {product.name}
               </h2>
 
@@ -170,7 +188,7 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
                             cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium transition-all border select-none
                             ${isSelected
                                 ? "bg-primary text-primary-foreground border-primary shadow-sm scale-105"
-                                : "bg-white text-foreground border-border hover:border-primary/50 hover:bg-secondary/20"}
+                                : "bg-card text-foreground border-border hover:border-primary/50 hover:bg-secondary/20"}
                           `}
                         >
                           {v.name}
@@ -186,44 +204,50 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
               </div>
 
               {isWeighable && (
-                  <div className="mt-6 p-3 bg-blue-50 rounded-lg text-blue-700 text-xs md:text-sm leading-snug">
+                  <div className="mt-6 p-3 bg-secondary/40 border border-border rounded-lg text-foreground/80 text-xs md:text-sm leading-snug">
                       ℹ️ Цена указана за 1 кг. Минимальный шаг заказа для этого товара: <b>{step} кг</b>.
                   </div>
               )}
            </div>
 
-           {/* Футер */}
-           <div className="p-5 border-t border-gray-100 bg-gray-50/30 flex flex-col sm:flex-row gap-4 items-center justify-between mt-auto rounded-b-2xl md:rounded-br-2xl md:rounded-bl-none">
+           {/* Футер — flex-shrink-0 чтобы никогда не сжимался и оставался видимым.
+               Это решает баг "невозможно докрутить до кнопки В корзину" на мобиле. */}
+           <div className="flex-shrink-0 p-4 md:p-5 border-t border-border bg-muted/30 flex items-center justify-between gap-3 rounded-b-2xl md:rounded-br-2xl md:rounded-bl-none">
 
-              <div className="flex flex-col items-center sm:items-start">
+              {/* Сумма — компактнее на мобиле, чтобы оставалось место для кнопки. */}
+              <div className="flex flex-col items-start flex-shrink-0">
                   <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
                       Сумма
                   </span>
-                  <span className="text-xl font-bold text-gray-900 tabular-nums">
+                  <span className="text-lg sm:text-xl font-bold text-foreground tabular-nums leading-tight">
                       {quantity > 0
                           ? Math.round(quantity * product.priceRub).toLocaleString('ru-RU')
                           : "0"} ₽
                   </span>
               </div>
 
-              <div className="w-full sm:w-auto">
+              {/* Кнопка / +- контролы — flex-1 чтобы занимать оставшееся место,
+                  на десктопе можно ограничить max-w. */}
+              <div className="flex-1 max-w-[260px]">
                   {quantity === 0 ? (
                     <Button
                         onClick={handleAdd}
                         size="lg"
-                        className="w-full rounded-xl shadow-md font-semibold text-base"
+                        className="w-full h-11 rounded-xl shadow-md font-semibold text-sm sm:text-base"
                         // Блокируем кнопку, если вариант не выбран
                         disabled={hasVariants && !selectedVariantId}
                     >
-                      <ShoppingCart className="h-5 w-5 mr-2" />
-                      {hasVariants && !selectedVariantId ? "Выберите вариант" : "В корзину"}
+                      <ShoppingCart className="h-5 w-5 mr-2 flex-shrink-0" />
+                      <span className="truncate">
+                        {hasVariants && !selectedVariantId ? "Выберите вариант" : "В корзину"}
+                      </span>
                     </Button>
                   ) : (
-                    <div className="flex items-center justify-between gap-3 bg-white rounded-xl p-1 shadow-sm border border-gray-200 w-full sm:w-auto min-w-[140px]">
+                    <div className="flex items-center justify-between gap-2 bg-card rounded-xl p-1 shadow-sm border border-border min-w-[140px]">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10 rounded-lg hover:bg-gray-100"
+                        className="h-10 w-10 flex-shrink-0 rounded-lg hover:bg-secondary"
                         onClick={handleRemove}
                       >
                         <Minus className="h-5 w-5" />
@@ -243,7 +267,7 @@ export function ProductDetailsModal({ product, open, onOpenChange }: ProductDeta
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10 rounded-lg hover:bg-gray-100"
+                        className="h-10 w-10 flex-shrink-0 rounded-lg hover:bg-secondary"
                         onClick={handleAdd}
                       >
                         <Plus className="h-5 w-5" />

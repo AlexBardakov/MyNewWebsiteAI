@@ -69,7 +69,7 @@ export function RecipeDetailsModal({ recipe, open, onOpenChange }: RecipeDetails
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-5xl w-[95vw] p-0 gap-0 bg-white rounded-2xl border-none shadow-xl flex flex-col md:flex-row h-[90vh] md:h-[85vh] overflow-hidden">
+      <DialogContent className="!max-w-5xl w-[95vw] p-0 gap-0 bg-card rounded-2xl border-none shadow-xl flex flex-col md:flex-row h-[90vh] md:h-[85vh] overflow-hidden">
 
         <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
         <DialogDescription className="sr-only">Детали рецепта</DialogDescription>
@@ -110,7 +110,7 @@ export function RecipeDetailsModal({ recipe, open, onOpenChange }: RecipeDetails
         </div>
 
         {/* ПРАВАЯ ЧАСТЬ (Контент) */}
-        <div className="flex flex-col w-full md:w-[55%] bg-white h-full overflow-hidden">
+        <div className="flex flex-col w-full md:w-[55%] bg-card h-full overflow-hidden">
 
            {/* Область прокрутки занимает всё доступное место (flex-1) */}
            <ScrollArea className="flex-1 w-full">
@@ -118,7 +118,7 @@ export function RecipeDetailsModal({ recipe, open, onOpenChange }: RecipeDetails
 
                 {/* Заголовок */}
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold leading-tight text-gray-900 mb-2">
+                  <h2 className="text-2xl md:text-3xl leading-tight text-foreground mb-2">
                       {recipe.title}
                   </h2>
                   {recipe.shortDescription && (
@@ -128,15 +128,15 @@ export function RecipeDetailsModal({ recipe, open, onOpenChange }: RecipeDetails
                   )}
                 </div>
 
-                <div className="h-px bg-gray-100 w-full" />
+                <div className="h-px bg-border w-full" />
 
                 {/* Ингредиенты */}
                 {recipe.ingredientsText && (
-                  <div className="bg-orange-50/50 rounded-xl p-5 border border-orange-100/50">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-orange-800 mb-3 flex items-center gap-2">
+                  <div className="bg-accent/15 rounded-xl p-5 border border-accent/30">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-foreground/80 mb-3 flex items-center gap-2">
                       📋 Ингредиенты
                     </h3>
-                    <div className="prose prose-sm text-gray-700 whitespace-pre-wrap leading-relaxed font-medium">
+                    <div className="prose prose-sm text-foreground/80 whitespace-pre-wrap leading-relaxed font-medium">
                       {recipe.ingredientsText}
                     </div>
                   </div>
@@ -145,10 +145,10 @@ export function RecipeDetailsModal({ recipe, open, onOpenChange }: RecipeDetails
                 {/* Способ приготовления */}
                 {recipe.content && (
                    <div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <h3 className="text-lg text-foreground mb-3 flex items-center gap-2">
                         👨‍🍳 Способ приготовления
                       </h3>
-                      <div className="prose prose-gray max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap">
+                      <div className="prose prose-gray max-w-none text-foreground/75 leading-relaxed whitespace-pre-wrap">
                         {recipe.content}
                       </div>
                    </div>
@@ -159,14 +159,14 @@ export function RecipeDetailsModal({ recipe, open, onOpenChange }: RecipeDetails
                     <>
                         <div className="h-px bg-gray-100 w-full mt-6" />
                         <div className="pt-2">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <h3 className="text-lg text-foreground mb-4 flex items-center gap-2">
                                🧀 Рекомендуемые сыры
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {recipe.recipeProducts.map(({ product }) => (
-                                    <div key={product.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:border-primary/20 transition-colors">
+                                    <div key={product.id} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-muted/40 hover:border-primary/30 transition-colors">
                                         {/* Мини-фото товара */}
-                                        <div className="w-12 h-12 rounded-lg bg-white overflow-hidden relative flex-shrink-0 border">
+                                        <div className="w-12 h-12 rounded-lg bg-card overflow-hidden relative flex-shrink-0 border border-border">
                                             {product.imageUrl ? (
                                                 <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
                                             ) : (

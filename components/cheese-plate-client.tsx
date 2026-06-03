@@ -344,7 +344,7 @@ export default function CheesePlateClient({ initialProducts, initialCategories, 
 
         <div className="grid md:grid-cols-3 gap-6">
             {suggestions.map((plate, idx) => (
-                <div key={idx} className="bg-white rounded-2xl border p-5 flex flex-col gap-4 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
+                <div key={idx} className="bg-card rounded-2xl border border-border p-5 flex flex-col gap-4 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
                     <div className="flex justify-between items-center pb-3 border-b border-dashed">
                         <span className="font-semibold text-lg">Вариант №{idx + 1}</span>
                         <Badge variant="secondary" className="bg-secondary text-secondary-foreground text-sm px-2 py-0.5">
@@ -457,7 +457,7 @@ export default function CheesePlateClient({ initialProducts, initialCategories, 
             {currentPlate && (
                 <div className="space-y-4 flex-1">
                     {currentPlate.products.map((p, idx) => (
-                        <div key={p.id} className="flex gap-4 items-center bg-white border rounded-xl p-3 shadow-sm">
+                        <div key={p.id} className="flex gap-4 items-center bg-card border border-border rounded-xl p-3 shadow-sm">
                              <div className="w-16 h-16 bg-secondary/20 rounded-lg relative overflow-hidden flex-shrink-0">
                                  {p.imageUrl && <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />}
                              </div>
