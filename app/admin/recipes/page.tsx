@@ -7,6 +7,10 @@ import { deleteRecipe } from "./actions";
 import Image from "next/image";
 import Link from "next/link";
 
+// Список товаров для привязки к рецептам берётся из БД. Без force-dynamic страница
+// собиралась статически, и новые товары не появлялись здесь до пересборки.
+export const dynamic = "force-dynamic";
+
 export default async function AdminRecipesPage() {
   const recipes = await db.recipe.findMany({
     include: { category: true, recipeProducts: true },

@@ -7,6 +7,9 @@ import { Trash2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { createRecipeCategory, deleteRecipeCategory } from "./actions";
 
+// Данные из БД — рендерим на каждый запрос, а не один раз при сборке.
+export const dynamic = "force-dynamic";
+
 export default async function RecipeCategoriesPage() {
   const categories = await db.recipeCategory.findMany({
     orderBy: { displayOrder: 'asc' },

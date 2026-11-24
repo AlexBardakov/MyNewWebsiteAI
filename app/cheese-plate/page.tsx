@@ -9,6 +9,12 @@ export const metadata: Metadata = {
   description: "Соберите идеальную сырную тарелку под ваш вкус и бюджет.",
 };
 
+// Страница читает товары и остатки из БД. Без этой строки Next.js собирал её
+// статически (на момент `npm run build`), и утреннее обновление наличия в админке
+// не доходило до конструктора до следующей пересборки. Как и /catalog — рендерим
+// на каждый запрос.
+export const dynamic = "force-dynamic";
+
 export default async function CheesePlatePage() {
   // 1. Загружаем все данные и сразу генерируем 3 варианта тарелок
   const [productsRaw, categoriesRaw, groupsRaw, suggestionsRaw] = await Promise.all([

@@ -5,6 +5,10 @@ import { CategoryDialog } from "./category-dialog"; // Создадим ниже
 import { Edit, Trash2, Check, X } from "lucide-react";
 import { deleteCategory } from "./actions";
 
+// Счётчик товаров в категориях берётся из БД. Без force-dynamic страница собиралась
+// статически, и после добавления/удаления товаров счётчик не менялся до пересборки.
+export const dynamic = "force-dynamic";
+
 export default async function AdminCategoriesPage() {
   const categories = await db.category.findMany({
     orderBy: { displayOrder: 'asc' },
