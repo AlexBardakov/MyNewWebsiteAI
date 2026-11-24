@@ -50,7 +50,13 @@ export async function middleware(request: NextRequest) {
 
   // 5. Для обычных запросов делаем полную проверку токена в middleware.
   try {
-    await jwtVerify(token, SECRET_KEY);
+    const { payload } = await jwtVerify(token, SECRET_KEY, { algorithms: ["HS256"] });
+    // Пускаем только токен админ-сессии (role=admin, см. lib/auth.ts signSession).
+    // Любые другие подписанные токены (например, ссылки просмотра заказа из
+    // уведомлений, lib/notify/view-link.ts) сюда не годятся — у них и ключ другой.
+    if (payload.role !== "admin") {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
     return NextResponse.next();
   } catch (error) {
     console.error("Middleware: Неверный токен", error);

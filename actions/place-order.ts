@@ -2,7 +2,7 @@
 'use server'
 
 import { prisma } from "@/lib/prisma";
-import { sendTelegramNotification } from "@/lib/telegram";
+import { notifyNewOrder } from "@/lib/notify";
 import { revalidatePath } from "next/cache";
 
 interface CartItem {
@@ -89,26 +89,15 @@ export async function placeOrder(data: OrderData) {
       include: { items: true }
     });
 
-    // 2. Отправляем ОБЕЗЛИЧЕННОЕ уведомление в Telegram В ФОНЕ (без await).
-    //    Никаких ПДн (имя, телефон, адрес, комментарий) в Telegram не уходит.
-    //    Подробности см. lib/telegram.ts и docs/privacy-draft.md, раздел 7.3.
-    sendTelegramNotification({
-        shortId: order.id.slice(-6).toUpperCase(),
-        dbId: order.id,
-        deliveryMethod: order.deliveryMethod,
-        totalAmount: order.totalRub,
-        items: data.items.map(item => ({
-            name: item.name,
-            variant: item.variant ?? null,
-            quantity: item.quantity,
-            price: item.priceRub,
-            unit: item.unit,
-        })),
-    }).catch(tgError => console.error("Ошибка фоновой отправки в Telegram:", tgError));
+    // 2. ОБЕЗЛИЧЕННОЕ уведомление администраторам (ВКонтакте) В ФОНЕ (без await).
+    //    Имя, телефон, адрес и комментарий не отправляются — они по ссылке на 4 часа.
+    //    Состав берём из сохранённого заказа (order.items), а не из браузера.
+    //    Подробности: lib/notify/index.ts.
+    notifyNewOrder(order).catch((e) => console.error("Ошибка фоновой отправки уведомления о заказе:", e));
 
     revalidatePath('/admin/orders');
 
-    // Мгновенно возвращаем успех на фронтенд, не дожидаясь ответа от Telegram
+    // Мгновенно возвращаем успех на фронтенд, не дожидаясь отправки уведомления
     return { success: true, orderId: order.id };
 
   } catch (error) {

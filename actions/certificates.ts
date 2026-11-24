@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { sendTelegramCertificateNotification } from '@/lib/telegram'
+import { notifyNewCertificate } from '@/lib/notify'
 
 // Генерация 6-значного номера (только цифры)
 function generateShortNumber() {
@@ -80,14 +80,13 @@ export async function createCertificate(data: {
       }
     })
 
-    // ОБЕЗЛИЧЕННОЕ уведомление в Telegram (без ПДн отправителя/получателя).
-    // Подробности и ссылки на конкретного отправителя/получателя — только в админке.
-    // См. lib/telegram.ts и docs/privacy-draft.md, раздел 7.3.
-    sendTelegramCertificateNotification({
+    // ОБЕЗЛИЧЕННОЕ уведомление администраторам (ВКонтакте) В ФОНЕ: номер и номинал.
+    // Данные отправителя/получателя — по ссылке на 4 часа или в админке (lib/notify).
+    notifyNewCertificate({
+      id: certificate.id,
       shortNumber,
-      dbId: certificate.id,
-      amount: data.amount,
-    }).catch(console.error);
+      amount: certificate.amount,
+    }).catch((e) => console.error('Ошибка фоновой отправки уведомления о сертификате:', e));
 
     return { success: true, certificate }
   } catch (error) {
