@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+/* Код Android-приложения лежит в этом же репозитории — Tailwind его не сканирует. */
+@source not "../android";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

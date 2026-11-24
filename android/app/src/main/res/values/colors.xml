@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Цвета сайта (app/globals.css, переменные brand-*) -->
+    <color name="brand_gold">#D79D34</color>
+    <color name="brand_cream">#FAF6EE</color>
+    <color name="brand_charcoal">#171310</color>
+    <!-- Фон иконки = фон круглого логотипа -->
+    <color name="ic_launcher_background">#232126</color>
+</resources>

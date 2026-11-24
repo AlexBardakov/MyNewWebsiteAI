@@ -47,3 +47,14 @@ next-env.d.ts
 
 # Claude Code (worktree, локальные настройки)
 /.claude/
+
+# Android-приложение (android/): сборка и ключ подписи — не в git
+/android/.gradle/
+/android/build/
+/android/app/build/
+/android/local.properties
+/android/keystore.properties
+/android/.idea/
+/android/.kotlin/
+*.jks
+*.keystore

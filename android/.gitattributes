@@ -1,0 +1,5 @@
+# Скрипт gradlew должен быть с переводами строк Unix (LF), иначе не запустится.
+gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary
+*.png binary
