@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
+import Image from "@/components/ui/smart-image"; // next/image + сжатые копии из /uploads
 import { Product } from '@/components/catalog-client';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/store/cart';
@@ -96,6 +96,8 @@ export function ProductCard({ product, priority = false }: Props) {
               alt={product.name}
               fill
               priority={priority}
+              // Ширина карточки в сетке каталога: 2 / 3 / 4 / 5 колонок.
+              sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, (max-width: 1279px) 25vw, 20vw"
               className={cn(
                 "object-cover transition-transform duration-500 group-hover:scale-105",
                 isOutOfStock && "blur-[3px] opacity-70 grayscale-[20%]"

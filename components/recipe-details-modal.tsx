@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/smart-image"; // next/image + сжатые копии из /uploads
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, ChefHat, ShoppingCart } from "lucide-react";
@@ -168,7 +168,7 @@ export function RecipeDetailsModal({ recipe, open, onOpenChange }: RecipeDetails
                                         {/* Мини-фото товара */}
                                         <div className="w-12 h-12 rounded-lg bg-card overflow-hidden relative flex-shrink-0 border border-border">
                                             {product.imageUrl ? (
-                                                <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                                                <Image src={product.imageUrl} alt={product.name} fill sizes="48px" className="object-cover" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center bg-secondary/10 text-xs">🧀</div>
                                             )}

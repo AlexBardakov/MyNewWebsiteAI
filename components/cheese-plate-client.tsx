@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import Image from 'next/image';
+import Image from "@/components/ui/smart-image"; // next/image + сжатые копии из /uploads
 import { useCart } from '@/store/cart';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -355,7 +355,7 @@ export default function CheesePlateClient({ initialProducts, initialCategories, 
                         {plate.products.map(p => (
                             <li key={p.id} className="flex gap-3 text-sm">
                                 <div className="w-10 h-10 rounded-lg bg-secondary/30 relative overflow-hidden flex-shrink-0">
-                                    {p.imageUrl && <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />}
+                                    {p.imageUrl && <Image src={p.imageUrl} alt={p.name} fill sizes="40px" className="object-cover" />}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="font-medium truncate">{p.name}</div>
@@ -459,7 +459,7 @@ export default function CheesePlateClient({ initialProducts, initialCategories, 
                     {currentPlate.products.map((p, idx) => (
                         <div key={p.id} className="flex gap-4 items-center bg-card border border-border rounded-xl p-3 shadow-sm">
                              <div className="w-16 h-16 bg-secondary/20 rounded-lg relative overflow-hidden flex-shrink-0">
-                                 {p.imageUrl && <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />}
+                                 {p.imageUrl && <Image src={p.imageUrl} alt={p.name} fill sizes="64px" className="object-cover" />}
                              </div>
                              <div className="flex-1 min-w-0">
                                  <h4 className="font-bold truncate">{p.name}</h4>

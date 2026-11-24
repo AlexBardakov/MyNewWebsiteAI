@@ -1,5 +1,6 @@
 // app/admin/products/page.tsx
 import { ProductDialog } from "./product-dialog";
+import Image from "@/components/ui/smart-image"; // next/image + сжатые копии из /uploads
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import {
@@ -94,9 +95,13 @@ export default async function AdminProductsPage(props: {
                       <TableRow key={product.id}>
                         <TableCell>
                           {product.imageUrl ? (
-                            <img
+                            // Миниатюра 40×40 — грузим копию 160 px (~8 КБ), а не исходник (~230 КБ).
+                            // Владелец открывает эту страницу с телефона каждое утро.
+                            <Image
                               src={product.imageUrl}
                               alt={product.name}
+                              width={40}
+                              height={40}
                               className="h-10 w-10 rounded object-cover"
                             />
                           ) : (

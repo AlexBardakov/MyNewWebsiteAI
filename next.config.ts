@@ -23,7 +23,18 @@ const nextConfig: NextConfig = {
   images: {
     // Все пользовательские изображения хранятся локально в public/uploads (см. lib/upload.ts).
     // Внешние домены не используются — это снижает юридический риск (152-ФЗ) и потенциальный SSRF.
-    unoptimized: true,
+    //
+    // Встроенный оптимизатор Next не подходит: файлы, загруженные в public/ после сборки,
+    // Next не отдаёт (/uploads отдаёт nginx напрямую). Поэтому раньше стояло unoptimized: true
+    // и в карточку 216×216 приходил исходник 800×800 PNG ~230 КБ.
+    //
+    // Теперь рядом с исходниками лежат готовые webp-копии 160/480/800 px
+    // (lib/upload.ts + scripts/optimize-images.mjs), а свой загрузчик подставляет нужную.
+    // Размеры ниже = ширины копий, чтобы srcset состоял ровно из существующих файлов.
+    loader: "custom",
+    loaderFile: "./lib/image-loader.ts",
+    imageSizes: [160],
+    deviceSizes: [480, 800],
     remotePatterns: [
       // Собственный домен — оставлен на случай локальных preview-сборок или зеркал
       { protocol: "https", hostname: "fourkings.ru" },

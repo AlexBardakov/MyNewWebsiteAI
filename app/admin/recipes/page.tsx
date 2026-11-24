@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { RecipeDialog } from "./recipe-dialog";
 import { Trash2, List } from "lucide-react";
 import { deleteRecipe } from "./actions";
-import Image from "next/image";
+import Image from "@/components/ui/smart-image"; // next/image + сжатые копии из /uploads
 import Link from "next/link";
 
 // Список товаров для привязки к рецептам берётся из БД. Без force-dynamic страница

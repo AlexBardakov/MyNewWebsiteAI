@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
+import Image from "@/components/ui/smart-image"; // next/image + сжатые копии из /uploads
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChefHat } from 'lucide-react';
@@ -115,6 +115,7 @@ export default function RecipesClient({ initialRecipes, categories }: RecipesCli
                             src={recipe.coverUrl || recipe.previewImageUrl || ""}
                             alt={recipe.title}
                             fill
+                            sizes="(max-width: 1023px) 50vw, 33vw"
                             className="object-cover transition-transform duration-700 group-hover:scale-105"
                           />
                         ) : (
@@ -162,7 +163,7 @@ export default function RecipesClient({ initialRecipes, categories }: RecipesCli
                             <div className="h-full flex flex-col overflow-hidden rounded-xl md:rounded-2xl border-none bg-card shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ring-1 ring-black/5">
                               <div className="relative aspect-[4/3] overflow-hidden bg-secondary/10">
                                 {recipe.coverUrl || recipe.previewImageUrl ? (
-                                  <Image src={recipe.coverUrl || recipe.previewImageUrl || ""} alt={recipe.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                                  <Image src={recipe.coverUrl || recipe.previewImageUrl || ""} alt={recipe.title} fill sizes="(max-width: 1023px) 50vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-105" />
                                 ) : (
                                   <div className="flex h-full items-center justify-center text-muted-foreground/30"><ChefHat className="h-10 w-10 md:h-16 md:w-16" /></div>
                                 )}

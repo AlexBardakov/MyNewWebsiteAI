@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import Image from "@/components/ui/smart-image"; // next/image + сжатые копии из /uploads
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus, ShoppingCart, X, Weight } from "lucide-react";

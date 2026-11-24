@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createRecipe, updateRecipe } from "./actions";
 import { Plus, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import Image from "next/image";
+import Image from "@/components/ui/smart-image"; // next/image + сжатые копии из /uploads
 
 interface RecipeData {
     id: string;
@@ -120,7 +120,7 @@ export function RecipeDialog({ categories, products, recipe }: RecipeDialogProps
             <div className="flex gap-4 items-center">
                 {recipe?.coverUrl && (
                     <div className="relative w-10 h-10 rounded overflow-hidden border">
-                         <Image src={recipe.coverUrl} alt="Cover" fill className="object-cover" />
+                         <Image src={recipe.coverUrl} alt="Cover" fill sizes="40px" className="object-cover" />
                     </div>
                 )}
                 <Input name="image" type="file" accept="image/*" className="flex-1" />

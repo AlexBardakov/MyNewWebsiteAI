@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from "@/components/ui/smart-image"; // next/image + сжатые копии из /uploads
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/store/cart';
 import { Button } from '@/components/ui/button';
@@ -117,7 +117,7 @@ export default function CartPage() {
                   {/* Картинка */}
                   <div className="relative w-20 h-20 bg-secondary/20 rounded-lg overflow-hidden flex-shrink-0">
                     {item.image ? (
-                      <Image src={item.image} alt={item.name} fill className="object-cover" />
+                      <Image src={item.image} alt={item.name} fill sizes="80px" className="object-cover" />
                     ) : (
                       <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Нет фото</div>
                     )}

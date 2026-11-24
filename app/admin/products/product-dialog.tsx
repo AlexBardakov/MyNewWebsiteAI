@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "@/components/ui/smart-image"; // next/image + сжатые копии из /uploads
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -137,7 +138,7 @@ export function ProductDialog({ categories, product }: { categories: any[], prod
             <Label>Изображение</Label>
             {product?.imageUrl && (
                 <div className="mb-2">
-                    <img src={product.imageUrl} alt="Current" className="h-16 w-16 rounded object-cover border" />
+                    <Image src={product.imageUrl} alt="Current" width={64} height={64} className="h-16 w-16 rounded object-cover border" />
                 </div>
             )}
             <Input name="image" type="file" accept="image/*" />
