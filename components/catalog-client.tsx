@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { getStoreStatus } from '@/lib/time';
-import { DividerOrnament, FlourishedHeading } from '@/components/ornaments';
+import { DividerOrnament } from '@/components/ornaments';
 
 interface Category {
   id: string;
@@ -76,9 +76,20 @@ export default function CatalogClient({ initialProducts, categories }: CatalogCl
   return (
     <div className="pb-20">
 
-      
+      {/* 1. HERO-СЕКЦИЯ КАТАЛОГА.
+          Поскольку главная страница редиректит на каталог, эта секция фактически
+          является "лицом" сайта. Единый паттерн hero для всех публичных страниц:
+          крупный заголовок (Playfair наследуется через h1) → DividerOrnament
+          (брендовый разделитель с тремя ромбами) → опциональный подзаголовок.
+          Mobile-first: размеры h1 и отступы плавно растут с md-брейкпойнта. */}
+      <section className="container mx-auto px-4 pt-6 pb-8 md:pt-12 md:pb-10 text-center">
+        <h1 className="text-3xl md:text-5xl text-foreground mb-4 md:mb-5">
+          Каталог
+        </h1>
+        <DividerOrnament className="max-w-xs mx-auto mb-4 md:mb-5" />
+      </section>
 
-      {/* 1. Sticky Меню Категорий.
+      {/* 2. Sticky Меню Категорий.
           Mobile-first: кнопки чуть крупнее (h-9, px-4) для удобного тапа пальцем.
           Фон ТОТ ЖЕ что у страницы (background/85) — чтобы меню визуально сливалось
           с hero, без эффекта "отрезанной полосы". При скролле визуальное отделение
@@ -105,22 +116,7 @@ export default function CatalogClient({ initialProducts, categories }: CatalogCl
         </div>
       </div>
 
-{/* 2. HERO-СЕКЦИЯ КАТАЛОГА.
-          Поскольку главная страница редиректит на каталог, эта секция фактически
-          является "лицом" сайта. Заголовок в Playfair, вензели по бокам — для
-          премиальной аура. Mobile-first: на узких экранах вензели скрываются
-          (внутри FlourishedHeading уже sm:block), остаётся компактный заголовок. */}
-      <section className="container mx-auto px-4 pt-6 pb-8 md:pt-12 md:pb-10 text-center">
-          <h1 className="text-3xl md:text-5xl text-foreground mb-2 md:mb-3">
-            Каталог
-          </h1>
-        <p className="mt-3 md:mt-4 text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
-          Крафтовые сыры, сделанные с любовью.
-        </p>
-      </section>
-
-
-      {/* 1. Основной контейнер */}
+      {/* 2. Основной контейнер */}
       <div className="container mx-auto px-4 md:px-8 space-y-12">
 
         {/* Сначала отфильтруем только категории с товарами — чтобы DividerOrnament
@@ -162,8 +158,6 @@ export default function CatalogClient({ initialProducts, categories }: CatalogCl
             </div>
         )}
       </div>
-
-
     </div>
   );
 }
