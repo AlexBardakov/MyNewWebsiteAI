@@ -68,3 +68,21 @@ export function certificateDetails(c: Certificate) {
     createdAt: c.createdAt.toISOString(),
   };
 }
+
+/** Товар для экрана «Остатки». remainder — целое число в единицах товара (кг или шт), как в веб-админке. */
+export function productStockItem(p: {
+  id: string; name: string; categoryId: string; unit: string; remainder: number;
+  isActive: boolean; priceRub: number; updatedAt: Date; variants?: { name: string }[];
+}) {
+  return {
+    id: p.id,
+    name: p.name,
+    categoryId: p.categoryId,
+    unit: p.unit,
+    remainder: p.remainder,
+    isActive: p.isActive,
+    priceRub: p.priceRub,
+    variants: (p.variants ?? []).map((v) => v.name),
+    updatedAt: p.updatedAt.toISOString(),
+  };
+}

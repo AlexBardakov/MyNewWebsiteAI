@@ -6,4 +6,6 @@
     <color name="brand_charcoal">#171310</color>
     <!-- Фон иконки = фон круглого логотипа -->
     <color name="ic_launcher_background">#232126</color>
+    <!-- Фон окна в тёмной теме (совпадает с background в ui/Theme.kt) -->
+    <color name="window_dark">#14110E</color>
 </resources>

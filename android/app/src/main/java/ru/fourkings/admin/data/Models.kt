@@ -92,3 +92,30 @@ data class CertificateResponse(val certificate: CertificateDetails)
 
 @Serializable
 data class ApiErrorBody(val error: String = "", val message: String = "")
+
+// ---------- Остатки ----------
+
+@Serializable
+data class Category(val id: String, val name: String)
+
+@Serializable
+data class ProductStock(
+    val id: String,
+    val name: String,
+    val categoryId: String,
+    val unit: String,          // "kg" | "pcs"
+    val remainder: Int,        // целое, в единицах товара (как в веб-админке)
+    val isActive: Boolean,
+    val priceRub: Int,
+    val variants: List<String> = emptyList(),
+    val updatedAt: String,
+)
+
+@Serializable
+data class ProductsResponse(val categories: List<Category>, val products: List<ProductStock>)
+
+@Serializable
+data class RemainderRequest(val remainder: Int)
+
+@Serializable
+data class ProductResponse(val product: ProductStock)

@@ -1,5 +1,6 @@
 package ru.fourkings.admin.ui
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,28 +17,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
-/** Стрелка «назад» (рисуем сами, чтобы не тянуть библиотеку иконок). */
-val ArrowBack: ImageVector by lazy {
-    ImageVector.Builder("back", 24.dp, 24.dp, 24f, 24f).path(
-        stroke = SolidColor(Color.Black), strokeLineWidth = 2f,
-        strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round,
-    ) {
-        moveTo(19f, 12f); lineTo(5f, 12f)
-        moveTo(12f, 19f); lineTo(5f, 12f); lineTo(12f, 5f)
-    }.build()
-}
-
 @Composable
 fun BackButton(onBack: () -> Unit) {
-    IconButton(onClick = onBack) { Icon(ArrowBack, contentDescription = "Назад") }
+    IconButton(onClick = onBack) { Icon(AppIcons.Back, contentDescription = "Назад") }
 }
 
 @Composable
@@ -60,7 +45,7 @@ fun ErrorBox(message: String, onRetry: () -> Unit) {
 /** Плашка статуса. */
 @Composable
 fun StatusChip(status: String, label: String) {
-    val (bg, fg) = when (status) {
+    val (lbg, lfg) = when (status) {
         "new", "PENDING" -> Color(0xFFDCEBFF) to Color(0xFF1D4E89)
         "picking" -> Color(0xFFFFF1C2) to Color(0xFF7A5A00)
         "awaiting_payment" -> Color(0xFFFFE3C7) to Color(0xFF8A4B00)
@@ -69,6 +54,8 @@ fun StatusChip(status: String, label: String) {
         "cancelled" -> Color(0xFFFBDADA) to Color(0xFF8E1F1F)
         else -> Color(0xFFE9E6E1) to Color(0xFF5C554D)
     }
+    // В тёмной теме — та же гамма, но приглушённый фон и светлый текст.
+    val (bg, fg) = if (isSystemInDarkTheme()) lfg.copy(alpha = 0.35f) to lbg else lbg to lfg
     Surface(color = bg, contentColor = fg, shape = MaterialTheme.shapes.small) {
         Text(label, Modifier.padding(horizontal = 8.dp, vertical = 3.dp), style = MaterialTheme.typography.labelMedium)
     }

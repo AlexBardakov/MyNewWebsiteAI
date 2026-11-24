@@ -24,8 +24,8 @@ android {
         applicationId = "ru.fourkings.admin"
         minSdk = 26          // Android 8.0+
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
         // Адрес сайта, с которым работает приложение.
         buildConfigField("String", "BASE_URL", "\"https://fourkings.ru\"")
     }
@@ -50,8 +50,22 @@ android {
             buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:3100\"")
         }
         release {
-            isMinifyEnabled = false
+            // R8: ужимает код и выкидывает неиспользуемые ресурсы — APK в несколько раз меньше,
+            // запуск быстрее. Правила для библиотек (OkHttp, kotlinx.serialization, WorkManager)
+            // идут внутри самих библиотек, свои — в proguard-rules.pro.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+        }
+        // Как боевая (R8, без отладки), но ходит на локальный сайт — проверить ужатую сборку на эмуляторе.
+        create("qa") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".qa"
+            versionNameSuffix = "-qa"
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:3100\"")
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
         }
     }
 

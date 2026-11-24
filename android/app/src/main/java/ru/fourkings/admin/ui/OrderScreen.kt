@@ -22,6 +22,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -36,7 +38,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -54,6 +58,8 @@ fun OrderScreen(token: String, orderId: String, onBack: () -> Unit, onUnauthoriz
     var busy by remember { mutableStateOf(false) }
     var reload by remember { mutableIntStateOf(0) }
     var confirmCancel by remember { mutableStateOf(false) }
+    val snackbar = remember { SnackbarHostState() }
+    val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(orderId, reload) {
         error = null
@@ -68,9 +74,12 @@ fun OrderScreen(token: String, orderId: String, onBack: () -> Unit, onUnauthoriz
         scope.launch {
             busy = true
             try {
-                order = Api.setOrderStatus(token, orderId, status)
+                val updated = Api.setOrderStatus(token, orderId, status)
+                order = updated
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                launch { snackbar.showSnackbar("Статус: ${updated.statusLabel}") }
             } catch (e: ApiException) {
-                if (e.code == 401) onUnauthorized() else error = e.message
+                if (e.code == 401) onUnauthorized() else launch { snackbar.showSnackbar(e.message) }
             } finally {
                 busy = false
             }
@@ -85,6 +94,7 @@ fun OrderScreen(token: String, orderId: String, onBack: () -> Unit, onUnauthoriz
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
+        snackbarHost = { SnackbarHost(snackbar) },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         val o = order
@@ -99,7 +109,6 @@ fun OrderScreen(token: String, orderId: String, onBack: () -> Unit, onUnauthoriz
                     StatusChip(o.status, o.statusLabel)
                     Text(tomskTime(o.createdAt), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                if (error != null) Text(error!!, color = MaterialTheme.colorScheme.error)
 
                 Section {
                     Text(o.customerName, style = MaterialTheme.typography.titleLarge)

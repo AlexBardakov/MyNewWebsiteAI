@@ -77,4 +77,12 @@ object Api {
 
     suspend fun certificate(token: String, id: String): CertificateDetails =
         json.decodeFromString<CertificateResponse>(request("/certificates/$id", token)).certificate
+
+    suspend fun products(token: String): ProductsResponse =
+        json.decodeFromString(request("/products", token))
+
+    suspend fun setRemainder(token: String, productId: String, remainder: Int): ProductStock =
+        json.decodeFromString<ProductResponse>(
+            request("/products/$productId/remainder", token, json.encodeToString(RemainderRequest(remainder)))
+        ).product
 }

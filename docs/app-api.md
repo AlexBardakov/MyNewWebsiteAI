@@ -64,6 +64,20 @@
 recipientName, recipientContact, message, createdAt } }`.
 Статусы: `PENDING` Ожидает оплаты, `PAID` Оплачен, `SENT` Отправлен, `USED` Использован.
 
+### `GET /products`
+Все товары для экрана «Остатки», в порядке веб-админки.
+```json
+{ "categories": [ { "id": "…", "name": "Мягкие сыры" } ],
+  "products": [ { "id": "…", "name": "Камамбер", "categoryId": "…", "unit": "kg", "remainder": 3,
+                  "isActive": true, "priceRub": 1600, "variants": [], "updatedAt": "…" } ] }
+```
+`remainder` — целое число в единицах товара (`kg` — кг, `pcs` — шт), как в веб-админке.
+На сайте товар «в наличии», если `remainder > 0` и `isActive = true`.
+
+### `POST /products/:id/remainder`
+Тело: `{ "remainder": 3 }` — целое от 0 до 100000. `0` = «нет в наличии».
+→ `{ "product": { … } }`. Каталог и конструктор тарелки показывают новое значение сразу.
+
 ## Ошибки
 Тело ошибки: `{ "error": "<код>", "message": "<текст для человека>" }`.
 `400 bad_request`, `401 unauthorized` / `wrong_password`, `404 not_found`, `429 too_many_attempts`, `500`.
