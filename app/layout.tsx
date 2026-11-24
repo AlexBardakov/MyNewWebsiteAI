@@ -66,6 +66,8 @@ export const metadata: Metadata = {
     title: "Four Kings — крафтовая сыроварня в Томске",
     description:
       "Крафтовые сыры собственного производства. Доставка по Томску, самовывоз, подарочные сертификаты.",
+    // Картинка превью, когда ссылку на сайт присылают во ВКонтакте, мессенджеры и т. п.
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "Four Kings — крафтовая сыроварня в Томске" }],
   },
   robots: { index: true, follow: true },
 };

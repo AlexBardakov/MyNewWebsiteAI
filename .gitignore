@@ -3,7 +3,10 @@
 # DB
 old.db
 prisma/dev.db
-public/
+# public/ — в git (логотип, фон сертификата, зоны доставки, robots.txt, картинка для соцсетей),
+# КРОМЕ загружаемого из админки и старых выгрузок:
+/public/uploads/
+/public/downloads/
 
 # dependencies
 /node_modules
