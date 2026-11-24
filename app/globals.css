@@ -13,8 +13,8 @@
   /* Шрифты. Подключение конкретных шрифтов — в app/layout.tsx через next/font.
      --font-serif         → Lora      (для h3, h4 — мелкие заголовки, текст серифом)
      --font-serif-display → Playfair  (для h1, h2 — крупные заголовки страниц/секций) */
-  /* --font-ruble содержит только знак ₽ (см. app/layout.tsx) — остальное рисует Inter. */
-  --font-sans: var(--font-ruble), var(--font-inter);
+  /* "Inter Ruble" содержит только знак ₽ (встроен, см. app/fonts/inter-ruble.css) — остальное рисует Inter. */
+  --font-sans: "Inter Ruble", var(--font-inter);
   --font-serif: var(--font-serif);
   --font-serif-display: var(--font-serif-display);
   --font-mono: var(--font-geist-mono);

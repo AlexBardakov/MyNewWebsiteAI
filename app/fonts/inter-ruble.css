@@ -1,0 +1,25 @@
+/*
+ * Знак рубля «₽» из шрифта Inter — встроен прямо в CSS (data: URL, ~3 КБ).
+ *
+ * Зачем: в Google-нарезке Inter символ ₽ (U+20BD) лежит в файле «расширенной
+ * латиницы» весом 83 КБ, и каждая страница с ценами качала его ради одного значка.
+ * Семейство "Inter Ruble" стоит первым в стеке --font-sans (app/globals.css) и
+ * благодаря unicode-range используется ТОЛЬКО для ₽; всё остальное рисует Inter.
+ *
+ * Почему именно встроено, а не отдельным файлом: отдельный файл (даже 2 КБ) приходил
+ * чуть позже первой отрисовки, браузер на это мгновение рисовал ₽ следующим шрифтом
+ * в стеке — обычным Inter — и всё равно скачивал его файл на 83 КБ (замер на проде
+ * 24.11.2026). Встроенный шрифт доступен сразу вместе с CSS — гонки нет.
+ *
+ * Источник: fonts.googleapis.com/css2?family=Inter:wght@100..900&text=₽
+ * (переменный шрифт, начертания 100–900; лицензия Inter — SIL OFL).
+ * Внешне знак тот же, что и раньше (сверено при 400 и 700).
+ */
+@font-face {
+  font-family: "Inter Ruble";
+  src: url(data:font/woff2;base64,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) format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+20BD;
+}
