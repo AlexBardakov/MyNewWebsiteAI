@@ -1,13 +1,10 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
-import { Playfair_Display } from 'next/font/google'
 
-const playfair = Playfair_Display({
-  subsets: ['cyrillic', 'latin'],
-  weight: ['400'],
-  style: ['normal']
-})
+// Шрифт сертификата — общий Playfair Display из app/layout.tsx (класс font-serif-display),
+// раньше здесь было отдельное подключение того же шрифта: +2 лишних файла (~32 КБ),
+// которые к тому же подгружались и на других страницах при предзагрузке ссылок.
 
 // Обновленная типизация: params теперь это Promise
 interface PageProps {
@@ -39,7 +36,7 @@ export default async function CertificatePage({ params }: PageProps) {
       </h1>
 
       <div
-        className={`relative w-full max-w-2xl mx-auto overflow-hidden rounded-xl shadow-2xl border border-gray-200 ${playfair.className}`}
+        className={`relative w-full max-w-2xl mx-auto overflow-hidden rounded-xl shadow-2xl border border-gray-200 font-serif-display font-normal`}
         style={{ containerType: 'inline-size' }}
       >
         <Image

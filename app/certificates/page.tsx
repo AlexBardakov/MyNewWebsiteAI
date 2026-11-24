@@ -3,14 +3,11 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { createCertificate } from '@/actions/certificates'
-import { Playfair_Display } from 'next/font/google'
 import Link from 'next/link'
 
-const playfair = Playfair_Display({
-  subsets: ['cyrillic', 'latin'],
-  weight: ['400'],
-  style: ['normal']
-})
+// Шрифт сертификата — общий Playfair Display из app/layout.tsx (класс font-serif-display),
+// раньше здесь было отдельное подключение того же шрифта: +2 лишних файла (~32 КБ),
+// которые к тому же подгружались и на других страницах при предзагрузке ссылок.
 
 export default function BuyCertificatePage() {
   const [loading, setLoading] = useState(false)
@@ -243,7 +240,7 @@ export default function BuyCertificatePage() {
           <h3 className="text-lg font-medium mb-4 text-gray-700 w-full text-left lg:text-center">Предварительный просмотр:</h3>
 
           <div
-            className={`relative w-full max-w-sm mx-auto overflow-hidden ${playfair.className}`}
+            className={`relative w-full max-w-sm mx-auto overflow-hidden font-serif-display font-normal`}
             style={{ containerType: 'inline-size' }}
           >
             <Image
