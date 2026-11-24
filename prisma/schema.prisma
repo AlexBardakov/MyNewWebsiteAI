@@ -248,3 +248,35 @@ model Certificate {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
+
+// ---------------------------------------------------------
+// Админ-приложение для Android (папка android/)
+// ---------------------------------------------------------
+
+// Журнал событий для уведомлений в приложении. Приложение раз в ~15 минут
+// спрашивает «что появилось после события №N» (GET /api/app/events?after=N),
+// поэтому ни одно событие не теряется, даже если телефон был выключен.
+// Тексты ОБЕЗЛИЧЕННЫЕ: они видны в шторке и на экране блокировки телефона.
+// Подробности (контакты покупателя) приложение берёт отдельным запросом.
+model AppEvent {
+  id        Int      @id @default(autoincrement())
+  type      String   // "order.created" | "certificate.created"
+  entityId  String   // id заказа или сертификата
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// Устройства, вошедшие в приложение паролем админки. Хранится только хеш ключа
+// устройства (сам ключ — только на телефоне). Потерянный телефон отключается в
+// веб-админке (/admin/devices): revokedAt != null — ключ больше не принимается.
+model AppDevice {
+  id         String    @id @default(cuid())
+  name       String
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime?
+  revokedAt  DateTime?
+}

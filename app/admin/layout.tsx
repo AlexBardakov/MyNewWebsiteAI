@@ -8,7 +8,8 @@ import {
   ChefHat,
   UtensilsCrossed,
   LogOut,
-  Menu
+  Menu,
+  Smartphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout } from "./login/actions";
@@ -68,6 +69,14 @@ function AdminNav({ className }: { className?: string }) {
       <Link href="/admin/certificates">
         <Button variant="ghost" className="w-full justify-start gap-2">
           Сертификаты
+        </Button>
+      </Link>
+
+      <div className="my-2 border-t border-border/50" />
+      <Link href="/admin/devices">
+        <Button variant="ghost" className="w-full justify-start gap-2">
+          <Smartphone className="h-4 w-4" />
+          Приложение: устройства
         </Button>
       </Link>
 
