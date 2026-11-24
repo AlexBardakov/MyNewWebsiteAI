@@ -21,6 +21,11 @@ interface CartState {
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
+  /**
+   * Подставить актуальные цены с сайта (productId → цена).
+   * Возвращает названия позиций, у которых цена изменилась.
+   */
+  syncPrices: (prices: Record<string, number>) => string[];
 }
 
 export const useCart = create<CartState>()(
@@ -68,6 +73,23 @@ export const useCart = create<CartState>()(
       },
 
       clearCart: () => set({ items: [], total: 0 }),
+
+      syncPrices: (prices) => {
+        const changed: string[] = [];
+        const newItems = get().items.map((i) => {
+          const actual = prices[i.productId || i.id];
+          if (typeof actual === 'number' && actual !== i.priceRub) {
+            changed.push(i.name);
+            return { ...i, priceRub: actual };
+          }
+          return i;
+        });
+        if (changed.length > 0) {
+          const total = newItems.reduce((sum, i) => sum + i.priceRub * i.quantity, 0);
+          set({ items: newItems, total });
+        }
+        return changed;
+      },
     }),
     {
       name: 'cart-storage',

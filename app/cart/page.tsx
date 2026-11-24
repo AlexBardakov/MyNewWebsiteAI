@@ -11,7 +11,8 @@ import { formatPrice } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { getStoreStatus } from '@/lib/time';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { getUnavailableProductIds } from '@/actions/cart-validation';
+import { getCartState } from '@/actions/cart-validation';
+import { toast } from 'sonner';
 
 // Импорт компонентов диалога (поп-апа)
 import {
@@ -25,7 +26,7 @@ import {
 
 export default function CartPage() {
   const router = useRouter();
-  const { items, updateQuantity, removeItem } = useCart();
+  const { items, updateQuantity, removeItem, syncPrices } = useCart();
 
   const [storeStatus, setStoreStatus] = useState<'open' | 'closing_soon' | 'closed'>('open');
   const [mounted, setMounted] = useState(false);
@@ -37,25 +38,23 @@ export default function CartPage() {
     setMounted(true);
   }, []);
 
-  // Проверка наличия товаров при загрузке или изменении корзины
+  // Проверка наличия и актуальных цен — при открытии и когда меняется набор товаров
+  // (не на каждое «+/−», чтобы не гонять лишние запросы).
+  const productKey = items.map(i => i.productId || i.id).sort().join(",");
   useEffect(() => {
-    if (items.length === 0) return;
-
-    const checkAvailability = async () => {
-      // Собираем реальные ID товаров в базе
-      const pIds = items.map(i => i.productId || i.id);
-      const badProductIds = await getUnavailableProductIds(pIds);
-
-      // Находим соответствующие ID в корзине
-      const badCartItemIds = items
-        .filter(i => badProductIds.includes(i.productId || i.id))
-        .map(i => i.id);
-
-      setUnavailableIds(badCartItemIds);
-    };
-
-    checkAvailability();
-  }, [items]);
+    if (!productKey) return;
+    let cancelled = false;
+    (async () => {
+      const { unavailable, prices } = await getCartState(productKey.split(","));
+      if (cancelled) return;
+      const current = useCart.getState().items;
+      setUnavailableIds(current.filter(i => unavailable.includes(i.productId || i.id)).map(i => i.id));
+      // Цены в корзине хранятся с момента добавления — подставляем актуальные с сайта.
+      const changed = syncPrices(prices);
+      if (changed.length > 0) toast.info(`Цена обновилась: ${changed.join(", ")}`);
+    })();
+    return () => { cancelled = true; };
+  }, [productKey, syncPrices]);
 
   // Вычисляем "эффективную" сумму, игнорируя недоступные товары
   const effectiveItems = useMemo(() => items.filter(i => !unavailableIds.includes(i.id)), [items, unavailableIds]);
@@ -78,6 +77,16 @@ export default function CartPage() {
       router.push('/checkout');
     }
   };
+
+  // До загрузки скриптов корзина (она в localStorage) ещё не прочитана — показываем
+  // загрузку, а не «Корзина пуста» (раньше на медленном интернете мелькало «пусто»).
+  if (!mounted) {
+    return (
+      <div className="container mx-auto px-4 py-20 flex justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" aria-label="Загрузка корзины" />
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (

@@ -129,6 +129,10 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "unload=(), interest-cohort=(), browsing-topics=()",
           },
+          // HSTS: браузер, однажды открыв сайт по HTTPS, год не пытается идти на него по HTTP
+          // (защита от подмены при первом запросе в чужом Wi-Fi). Без includeSubDomains —
+          // чтобы не задеть поддомены, у которых может не быть сертификата.
+          { key: "Strict-Transport-Security", value: "max-age=31536000" },
           // Дополнительная защита от MIME-sniffing и clickjacking
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

@@ -15,26 +15,31 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { DeliveryMap } from '@/components/delivery-map';
 import { useEffect } from 'react';
-import { getUnavailableProductIds } from '@/actions/cart-validation';
+import { getCartState } from '@/actions/cart-validation';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, total, clearCart } = useCart();
+  const { items, clearCart, syncPrices } = useCart();
   const [loading, setLoading] = useState(false);
   const [unavailableIds, setUnavailableIds] = useState<string[]>([]);
+  // До загрузки скриптов корзина (localStorage) ещё не прочитана — не показываем «Корзина пуста».
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-      useEffect(() => {
-        if (items.length === 0) return;
-        const checkAvailability = async () => {
-          const pIds = items.map(i => i.productId || i.id);
-          const badProductIds = await getUnavailableProductIds(pIds);
-          const badCartItemIds = items
-            .filter(i => badProductIds.includes(i.productId || i.id))
-            .map(i => i.id);
-          setUnavailableIds(badCartItemIds);
-        };
-        checkAvailability();
-      }, [items]);
+  // Наличие и актуальные цены — при открытии и когда меняется набор товаров.
+  const productKey = items.map(i => i.productId || i.id).sort().join(",");
+  const refreshCartState = async () => {
+    if (!productKey) return;
+    const { unavailable, prices } = await getCartState(productKey.split(","));
+    const current = useCart.getState().items;
+    setUnavailableIds(current.filter(i => unavailable.includes(i.productId || i.id)).map(i => i.id));
+    const changed = syncPrices(prices);
+    if (changed.length > 0) toast.info(`Цена обновилась: ${changed.join(", ")}`);
+  };
+  useEffect(() => {
+    refreshCartState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productKey]);
 
       // Считаем актуальный список и сумму ТОЛЬКО для живых товаров
       const effectiveItems = items.filter(i => !unavailableIds.includes(i.id));
@@ -61,6 +66,14 @@ export default function CheckoutPage() {
   const [consentPdn, setConsentPdn] = useState(false);
   const [consentOferta, setConsentOferta] = useState(false);
 
+  if (!mounted) {
+    return (
+      <div className="container mx-auto px-4 py-20 flex justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-label="Загрузка" />
+      </div>
+    );
+  }
+
   if (items.length === 0) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
@@ -72,6 +85,11 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (effectiveItems.length === 0) {
+        toast.error("Товары из корзины закончились — добавьте что-нибудь из каталога");
+        return;
+    }
 
     if (formData.deliveryType === 'delivery' && !formData.address) {
         toast.error("Пожалуйста, укажите адрес доставки");
@@ -126,7 +144,11 @@ export default function CheckoutPage() {
         // ВАЖНО: Мы НЕ вызываем setLoading(false) здесь.
         // Пусть лоадер крутится, пока страница не переключится.
       } else {
-        toast.error(res.error || 'Ошибка при оформлении');
+        // Сервер сверил корзину с базой: цены устарели или что-то закончилось.
+        // Обновляем корзину и просим подтвердить ещё раз — покупатель видит итог до оплаты.
+        if (res.code === 'PRICES_CHANGED' && res.prices) syncPrices(res.prices);
+        if (res.code === 'UNAVAILABLE' || res.code === 'PRICES_CHANGED') await refreshCartState();
+        toast.error(res.error || 'Ошибка при оформлении', { duration: 8000 });
         setLoading(false); // Снимаем загрузку только при ошибке от сервера
       }
     } catch (error) {
@@ -339,7 +361,7 @@ export default function CheckoutPage() {
               type="submit"
               size="lg"
               className="w-full font-bold text-lg h-12"
-              disabled={loading || !consentPdn || !consentOferta}
+              disabled={loading || !consentPdn || !consentOferta || effectiveItems.length === 0}
             >
               {loading ? (
                 <>
@@ -347,7 +369,7 @@ export default function CheckoutPage() {
                   Оформляем...
                 </>
               ) : (
-                `Подтвердить заказ на ${Math.round(total).toLocaleString('ru-RU')} ₽`
+                `Подтвердить заказ на ${Math.round(effectiveTotal).toLocaleString('ru-RU')} ₽`
               )}
             </Button>
           </form>

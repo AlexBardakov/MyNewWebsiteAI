@@ -4,7 +4,11 @@
  * с одного адреса. После перезапуска сайта счётчики обнуляются — это нормально.
  */
 type Bucket = { fails: number; resetAt: number };
-const buckets = new Map<string, Bucket>();
+// Храним в globalThis: Next.js собирает server actions и API-маршруты в разные модули,
+// и обычная переменная была бы своя в каждом — счётчик входа в админку и в приложение
+// не складывался бы. globalThis один на весь процесс.
+const g = globalThis as typeof globalThis & { __fkLoginBuckets?: Map<string, Bucket> };
+const buckets: Map<string, Bucket> = (g.__fkLoginBuckets ??= new Map<string, Bucket>());
 
 export interface Limit {
   max: number;

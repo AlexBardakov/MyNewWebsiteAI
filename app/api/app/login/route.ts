@@ -16,7 +16,8 @@ export const dynamic = "force-dynamic";
 const LIMIT = { max: 5, windowMs: 15 * 60_000 };
 
 export async function POST(req: Request) {
-  const key = `app-login:${clientIp(req.headers)}`;
+  // Ключ общий с входом в веб-админку (app/admin/login/actions.ts) — попытки считаются вместе.
+  const key = `login:${clientIp(req.headers)}`;
   const wait = retryAfterSeconds(key, LIMIT);
   if (wait > 0) {
     return NextResponse.json(

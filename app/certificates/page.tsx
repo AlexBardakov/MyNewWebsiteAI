@@ -53,12 +53,12 @@ export default function BuyCertificatePage() {
       },
     })
 
-    if (result.success && result.certificate) {
+    if (result.success) {
       // Вместо редиректа просто показываем экран успеха
       setIsSuccess(true)
       setLoading(false)
     } else {
-      alert('Произошла ошибка при создании сертификата')
+      alert(result.error || 'Произошла ошибка при создании сертификата')
       setLoading(false)
     }
   }
@@ -122,6 +122,7 @@ export default function BuyCertificatePage() {
                 type="text" required
                 placeholder="Укажите получателя"
                 className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                maxLength={60}
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
               />
@@ -146,6 +147,7 @@ export default function BuyCertificatePage() {
                 type="text" required
                 placeholder="Укажите отправителя"
                 className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                maxLength={60}
                 value={senderName}
                 onChange={(e) => setSenderName(e.target.value)}
               />
@@ -157,6 +159,7 @@ export default function BuyCertificatePage() {
                 rows={3}
                 placeholder="Введите пожелания для получателя или оставьте поле пустым"
                 className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none resize-none"
+                maxLength={300}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
               />
@@ -168,6 +171,7 @@ export default function BuyCertificatePage() {
                 type="tel" required
                 placeholder="+7 (___) ___-__-__"
                 className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                maxLength={100}
                 value={senderContact}
                 onChange={(e) => setSenderContact(e.target.value)}
               />
@@ -180,6 +184,7 @@ export default function BuyCertificatePage() {
                 type="text" required
                 placeholder="Email или телефон получателя"
                 className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                maxLength={100}
                 value={recipientContact}
                 onChange={(e) => setRecipientContact(e.target.value)}
               />

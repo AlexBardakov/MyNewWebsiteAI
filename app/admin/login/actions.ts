@@ -1,9 +1,14 @@
 'use server'
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { signSession } from "@/lib/auth";
 import { verifyPassword } from "@/lib/passwords";
+import { clientIp, registerFailure, resetFailures, retryAfterSeconds } from "@/lib/rate-limit";
+
+// Не больше 5 неверных паролей за 15 минут с одного адреса — защита от подбора.
+// Счётчик общий с входом в Android-приложение (app/api/app/login), ключ «login:IP».
+const LOGIN_LIMIT = { max: 5, windowMs: 15 * 60_000 };
 
 const COOKIE_NAME = "admin_session";
 
@@ -29,10 +34,18 @@ export async function loginAction(prevState: any, formData: FormData) {
     return { error: "Введите пароль", success: false };
   }
 
+  const limitKey = `login:${clientIp(await headers())}`;
+  const wait = retryAfterSeconds(limitKey, LOGIN_LIMIT);
+  if (wait > 0) {
+    return { error: `Слишком много попыток. Попробуйте через ${Math.ceil(wait / 60)} мин.`, success: false };
+  }
+
   const ok = await verifyPassword(password, expectedHash);
   if (!ok) {
+    registerFailure(limitKey, LOGIN_LIMIT);
     return { error: "Неверный пароль", success: false };
   }
+  resetFailures(limitKey);
 
   const cookieStore = await cookies();
   const token = await signSession();
