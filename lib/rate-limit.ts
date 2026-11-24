@@ -35,9 +35,17 @@ export function resetFailures(key: string): void {
   buckets.delete(key);
 }
 
-/** IP клиента за nginx (X-Forwarded-For / X-Real-IP); без них — общий ключ. */
+/**
+ * IP посетителя за nginx.
+ * 1) X-Real-IP — nginx ставит его сам ($remote_addr), подделать нельзя (нужна строка
+ *    `proxy_set_header X-Real-IP $remote_addr;` в конфиге сайта — см. docs/env.md).
+ * 2) Иначе — ПОСЛЕДНИЙ адрес в X-Forwarded-For: его дописывает nginx. Первый адрес
+ *    посетитель может прислать сам и так обходить лимит попыток.
+ */
 export function clientIp(headers: Headers): string {
+  const real = headers.get("x-real-ip");
+  if (real) return real.trim();
   const xff = headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
-  return headers.get("x-real-ip") || "unknown";
+  if (xff) return xff.split(",").pop()!.trim();
+  return "unknown";
 }
