@@ -5,7 +5,7 @@ import CheesePlateClient, { Product, Category, ProductGroup } from "@/components
 import { buildSuggestions } from "@/lib/cheesePlateBuilder";
 
 export const metadata: Metadata = {
-  title: "Конструктор сырной тарелки | Four Kings",
+  title: "Конструктор сырной тарелки",
   description: "Соберите идеальную сырную тарелку под ваш вкус и бюджет.",
 };
 

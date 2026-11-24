@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import RecipesClient from "@/components/recipes-client";
 
 export const metadata = {
-  title: "Рецепты с сыром | Сыроварня Four Kings",
+  title: "Рецепты с сыром",
   description: "Вдохновляйтесь рецептами с лучшими фермерскими сырами.",
 };
 

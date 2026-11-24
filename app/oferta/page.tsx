@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Публичная оферта | CheeseShop",
+  title: "Публичная оферта",
 };
 
 export default function OfertaPage() {

@@ -18,6 +18,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { loadYandexMaps, loadDeliveryZones } from "@/lib/yandex-map";
+import { useInViewOnce } from "@/lib/use-in-view-once";
 
 interface Props {
   height?: number | string;
@@ -32,8 +33,12 @@ export default function YandexConstructorMap({
   const mapInstance = useRef<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Карта стоит внизу страницы — грузим Яндекс.Карты только когда посетитель
+  // до неё долистывает (см. lib/use-in-view-once.ts).
+  const inView = useInViewOnce(mapRef);
 
   useEffect(() => {
+    if (!inView) return;
     let active = true;
 
     (async () => {
@@ -87,7 +92,7 @@ export default function YandexConstructorMap({
         mapInstance.current = null;
       }
     };
-  }, []);
+  }, [inView]);
 
   return (
     <div

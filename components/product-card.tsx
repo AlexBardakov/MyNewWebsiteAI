@@ -12,9 +12,16 @@ import { Badge } from '@/components/ui/badge';
 
 interface Props {
   product: Product; // Используем базовый интерфейс, в нем уже есть variants
+  /**
+   * true — для первых карточек каталога, которые видны сразу при открытии.
+   * Их картинки грузятся немедленно и с высоким приоритетом (а не лениво),
+   * потому что именно первая картинка — самый крупный элемент первого экрана
+   * (LCP), по которому браузер и поисковики оценивают скорость загрузки.
+   */
+  priority?: boolean;
 }
 
-export function ProductCard({ product }: Props) {
+export function ProductCard({ product, priority = false }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { items, addItem, removeItem, updateQuantity } = useCart();
 
@@ -88,6 +95,7 @@ export function ProductCard({ product }: Props) {
               src={product.imageUrl}
               alt={product.name}
               fill
+              priority={priority}
               className={cn(
                 "object-cover transition-transform duration-500 group-hover:scale-105",
                 isOutOfStock && "blur-[3px] opacity-70 grayscale-[20%]"

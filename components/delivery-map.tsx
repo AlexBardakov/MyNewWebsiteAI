@@ -20,6 +20,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { loadYandexMaps, loadDeliveryZones } from "@/lib/yandex-map";
+import { useInViewOnce } from "@/lib/use-in-view-once";
 
 interface DeliveryMapProps {
   address?: string;
@@ -38,8 +39,13 @@ export function DeliveryMap({ onAddressSelect, className }: DeliveryMapProps) {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Грузим Яндекс.Карты, только когда карта подъезжает к экрану (lib/use-in-view-once.ts).
+  // На мобильном форма длинная, и пока человек заполняет имя и телефон,
+  // тяжёлый скрипт карт не отбирает у телефона сеть и процессор.
+  const inView = useInViewOnce(mapRef);
 
   useEffect(() => {
+    if (!inView) return;
     let active = true;
 
     const geocodeAndNotify = async (coords: number[]) => {
@@ -148,7 +154,7 @@ export function DeliveryMap({ onAddressSelect, className }: DeliveryMapProps) {
       }
       placemarkRef.current = null;
     };
-  }, []);
+  }, [inView]);
 
   return (
     <div

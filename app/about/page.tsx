@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import YandexConstructorMap from "@/components/YandexConstructorMap";
 
 export const metadata: Metadata = {
-  title: "О магазине и контакты | Four Kings",
+  title: "О магазине и контакты",
   description: "Контакты, адреса и график работы производственной точки Four Kings.",
 };
 

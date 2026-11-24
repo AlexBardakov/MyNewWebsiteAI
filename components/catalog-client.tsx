@@ -144,8 +144,13 @@ export default function CatalogClient({ initialProducts, categories }: CatalogCl
                 </h2>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
-                  {categoryProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                  {categoryProducts.map((product, i) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      // Первые 4 карточки первой категории видны сразу — грузим их без очереди.
+                      priority={visibleIndex === 0 && i < 4}
+                    />
                   ))}
                 </div>
               </section>

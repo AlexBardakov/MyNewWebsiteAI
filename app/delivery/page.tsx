@@ -3,7 +3,7 @@ import { Truck, CreditCard } from "lucide-react";
 import YandexConstructorMap from "@/components/YandexConstructorMap";
 
 export const metadata: Metadata = {
-  title: "Доставка и оплата | Four Kings",
+  title: "Доставка и оплата",
   description: "Условия доставки сыров и способы оплаты в магазине Four Kings.",
 };
 
